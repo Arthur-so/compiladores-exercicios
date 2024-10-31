@@ -1,16 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "funcs.h"
-// ./main "./file_to_read.txt" 8
+// ./main "./file_to_read.txt"
+
+#define BUFFER_SIZE 8
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
+    if (argc != 2) {
         printf("Wrong args passed!\n");
         return 0;
     }
 
     char* filename = argv[1];
-    int buffer_size = atoi(argv[2]);
 
     FILE *fptr = fopen(filename, "r");
     if (fptr == NULL) {
@@ -18,9 +19,18 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    Buffer* buffer = allocate_buffer(buffer_size);
-
-    replace_print(fptr, buffer);
+    Buffer* buffer = allocate_buffer(BUFFER_SIZE);
+    while (1) {
+        printf("aso1\n");
+        char c = get_next_char(fptr, buffer);
+        printf("aso2\n");
+        if (c == EOF) {
+            printf("break\n");
+            break;
+        }
+        printf("%c", c);
+    }
+    
 
     deallocate_buffer(buffer);
 
