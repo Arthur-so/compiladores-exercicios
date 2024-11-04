@@ -10,4 +10,5 @@ typedef struct {
 Buffer* allocate_buffer(int size);
 void deallocate_buffer(Buffer* buffer);
 char get_next_char(FILE *fptr, Buffer* buffer);
+void unget_char(Buffer* buffer);
 

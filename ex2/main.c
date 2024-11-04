@@ -3,7 +3,7 @@
 #include "funcs.h"
 // ./main "./file_to_read.txt"
 
-#define BUFFER_SIZE 8
+#define BUFFER_SIZE 256
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -21,11 +21,8 @@ int main(int argc, char **argv) {
 
     Buffer* buffer = allocate_buffer(BUFFER_SIZE);
     while (1) {
-        printf("aso1\n");
         char c = get_next_char(fptr, buffer);
-        printf("aso2\n");
         if (c == EOF) {
-            printf("break\n");
             break;
         }
         printf("%c", c);
