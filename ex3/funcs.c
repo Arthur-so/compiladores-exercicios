@@ -20,6 +20,7 @@ Buffer* allocate_buffer(int size) {
     buffer->next_char_id = 0;
     buffer->next_char_line = 0;
     buffer->size = size;
+    buffer->new_line = 0;
 
     return buffer;
 }
@@ -37,9 +38,13 @@ char get_next_char(FILE *fptr, Buffer* buffer) {
         if (buffer->data[0] == '\0') {  // Verifica fim de arquivo
             return EOF;
         }
+        if (buffer->new_line) {
+            buffer->next_char_line++;
+            buffer->new_line = 0;
+        }
     }
     if (buffer->data[buffer->next_char_id] == '\n') { // Nova linha
-        buffer->next_char_line++;
+        buffer->new_line = 1;
     }
     return buffer->data[buffer->next_char_id++];
 }

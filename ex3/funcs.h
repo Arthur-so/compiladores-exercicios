@@ -8,6 +8,7 @@ typedef struct {
     int next_char_id;
     int next_char_line;
     int size;
+    int new_line;
 } Buffer;
 
 Buffer* allocate_buffer(int size);
