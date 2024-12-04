@@ -62,6 +62,6 @@ void unget_char(Buffer* buffer) {
 void fill_buffer(FILE *fptr, Buffer *buffer) {
     memset(buffer->data, 0, buffer->size); // Reseya todos os bytes do buffer com 0
     if (fgets(buffer->data, buffer->size, fptr) != NULL) {
-        buffer->next_char_id = 0;
+        buffer->next_char_id = 1;
     }
 }
