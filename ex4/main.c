@@ -33,13 +33,13 @@ int main(int argc, char **argv) {
             break;
         }
 
-        // verifica se e' um char a ser inserido numa cadeia de caracteres: e' o primeiro caracter ou o ultimo tambem e' um caracter
+        // Verifica se o caractere é parte de um lexema de letras
         is_chain_char = (is_char(c)
                     && (char_lexeme_id == 0 || is_char(aux_lexeme[char_lexeme_id - 1])));
-        // verifica se e' um numero a ser inserido numa cadeia de numeros: e' o primeiro algarismo ou o ultimo tambem e' um numero
-        // is_chain_number = (is_number(c)
-        //             && (char_lexeme_id == 0 || is_number(aux_lexeme[char_lexeme_id])));
-        // adiciona a cadeia de numeros ou de caracteres
+        // Verifica se o caractere é parte de um número
+        is_chain_number = (is_num(c)
+                    && (char_lexeme_id == 0 || is_num(aux_lexeme[char_lexeme_id - 1])));
+        // Adiciona o caractere ao lexema
         if (is_chain_char || is_chain_number) {
             aux_lexeme[char_lexeme_id++] = c;
             buffer->next_char_id++;
@@ -51,13 +51,14 @@ int main(int argc, char **argv) {
             }
             // caso seja nao primeiro valor lido para montagem do lexema, apenas indica o final de um lexema (nao consome char do buffer)
             else {
-                aux_lexeme[char_lexeme_id] = '\0';
+                aux_lexeme[char_lexeme_id] = '\0'; // Finaliza o lexema
                 token = classifyLexeme(aux_lexeme);
 
                 classifier.line = buffer->next_char_line;
                 classifier.token = token;
                 strcpy(classifier.lexeme, aux_lexeme);
 
+                // Reseta o lexema para o próximo
                 char_lexeme_id = 0;
 
                 printf("Lexeme: %s - line: %d - token: %d\n", classifier.lexeme, classifier.line, classifier.token);

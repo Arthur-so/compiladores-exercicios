@@ -1,7 +1,7 @@
 #include <string.h>
 
 enum Token {
-    ID, INT, CHAR, FLOAT, DOUBLE, LONG, AUTO, BREAK, CASE, CONTINUE, DEFAULT,
+    ID, NUM, INT, CHAR, FLOAT, DOUBLE, LONG, AUTO, BREAK, CASE, CONTINUE, DEFAULT,
     DO, ENUM, EXTERN, FOR, GOTO, IF, REGISTER, RETURN, SHORT, SIGNED,
     SIZEOF, STATIC, STRUCT, SWITCH, WHILE
 };
@@ -20,3 +20,8 @@ typedef struct {
 } Classification;
 
 enum Token classifyLexeme(char* lexeme);
+
+int is_char(char c);
+int is_num(char c);
+
+

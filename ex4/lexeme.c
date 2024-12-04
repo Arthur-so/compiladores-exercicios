@@ -28,7 +28,10 @@ int is_num(char c) {
 enum Token classifyLexeme(char* lexeme) {
     int total_words = sizeof(key_words) / sizeof(KeyWord);
     for (int i = 0; i < total_words; i++) {
-        if (strcmp(lexeme, key_words[i].word) == 0) {
+        if (is_num(lexeme[0]))
+            return NUM;
+
+        else if (strcmp(lexeme, key_words[i].word) == 0) {
             return key_words[i].token; // Palavra-chave encontrada
         }
     }
