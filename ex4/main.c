@@ -42,14 +42,14 @@ int main(int argc, char **argv) {
         // Adiciona o caractere ao lexema
         if (is_chain_char || is_chain_number) {
             aux_lexeme[char_lexeme_id++] = c;
-            buffer->next_char_id++;
+            buffer->next_char_id++; // avanca char do buffer
         }
         else {
-            // caso seja o primeiro valor lido para montagem do lexema, avanco no buffer
+            // Caso seja o primeiro valor lido para montagem do lexema, avanco no buffer
             if (char_lexeme_id == 0) {
-                buffer->next_char_id++;
+                buffer->next_char_id++; // avanca char do buffer
             }
-            // caso seja nao primeiro valor lido para montagem do lexema, apenas indica o final de um lexema (nao consome char do buffer)
+            // Caso contrario, apenas indica o final de um lexema (nao avanca char do buffer)
             else {
                 aux_lexeme[char_lexeme_id] = '\0'; // Finaliza o lexema
                 token = classifyLexeme(aux_lexeme);
