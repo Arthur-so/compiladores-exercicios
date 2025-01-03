@@ -12,10 +12,53 @@ T = [
     [   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   8,   6,   6], # EStado 7 (/*comentario*/)
     [ [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]], # Estado 8 Aceitacao
 ]
-
 Aceita = [False, False, False, False, False, False, False, False, True]
 AdicionaAoToken = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, False, False]
 
+palavras_chave = {
+    "if": 1,
+    "else": 2,
+    "int": 3,
+    "return": 4,
+    "void": 5,
+    "while": 6,
+}
+simbolos = {
+    ';': 200,
+    ',': 201,
+    '(': 202,
+    ')': 203,
+    '[': 204,
+    ']': 205,
+    '{': 206,
+    '}': 207,
+    '/*': 208,
+    '*/': 209,
+    '+': 300,
+    '-': 301,
+    '*': 302,
+    '/': 303,
+    '<': 304,
+    '<=': 305,
+    '>': 306,
+    '>=': 307,
+    '=': 308,
+    '==': 309,
+    '!': 310,
+    '!=': 311,
+}
+
+def classifica_token(token):
+    if token in palavras_chave:
+        token_id = palavras_chave[token]  # ID da palavra-chave
+        print(f"Palavra-chave: {token}, ID: {token_id}")
+    elif token in simbolos:
+        token_id = simbolos[token]  # ID do delimitador
+        print(f"Simbolos: {token}, ID: {token_id}")
+    elif token.isdigit():
+        print(f"NUM: {token}, ID: 101")  # ID para números
+    elif token.isalpha():
+        print(f"ID: {token}, ID: 100")  # ID para identificadores
 
 def get_tipo(ch):
     if ch.isalpha():
@@ -44,7 +87,8 @@ def analisador_lexico(codigo):
             break
 
         if Aceita[estado]:
-            print(f"Token processado:{token}")
+            #print(f"Token processado:{token}")
+            classifica_token(token)
             token = ''
 
         char_code = get_tipo(codigo[i])
