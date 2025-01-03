@@ -10,11 +10,11 @@ T = [
     [ [8], [8], [8], [8],   6, [8], [8], [8], [8], [8], [8], [8], [8], [8], [8], [8], [8], [8], [8], [8]], # Estado 5 (/*)
     [   6,   6,   6,   6,   7,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6], # EStado 6 (/*comentario*)
     [   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   8,   6,   6], # EStado 7 (/*comentario*/)
-    [   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0], # Estado 8 Aceitacao
+    [ [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]], # Estado 8 Aceitacao
 ]
 
 Aceita = [False, False, False, False, False, False, False, False, True]
-AdicionaAoToken = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, False, False]
+AdicionaAoToken = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, False, False]
 
 
 def get_tipo(ch):
@@ -44,7 +44,7 @@ def analisador_lexico(codigo):
             break
 
         if Aceita[estado]:
-            print(f"Token processado:{token}- tamanho: {len(token)}")
+            print(f"Token processado:{token}")
             token = ''
 
         char_code = get_tipo(codigo[i])
@@ -60,7 +60,7 @@ def analisador_lexico(codigo):
 
 codigo = """
 int xk = 10;
-if (x < 20) {
+if (x <= 20) {
     return x;
 }
 /* Comentário */
