@@ -101,6 +101,7 @@ def analisador_lexico(codigo):
         else:
             novo_estado = novo_estado[0]
         estado = novo_estado
+    return estado
 
 codigo = """
 int xk = 10;
@@ -110,4 +111,7 @@ if (x <= 20) {
 /* Comentário */
 """
 
-analisador_lexico(codigo)
+if analisador_lexico(codigo) == 0:
+    print("Aprovado")
+else:
+    print("Reprovado")
