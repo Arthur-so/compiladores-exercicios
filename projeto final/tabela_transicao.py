@@ -25,9 +25,8 @@ T = [
     [  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0]], # Estado 15 Aceitacao (<=)
     [  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0]], # Estado 16 Aceitacao (=)
     [  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0]], # Estado 17 Aceitacao (==)
-
     [  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0]], # Estado 18 Aceitacao (!=)
-    
+
     [  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0]], # Estado 19 Aceitacao (/*xxx*/)
 
     [  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0],  [0]], # Estado 20 Aceitacao (+)
@@ -47,11 +46,17 @@ T = [
 
 Aceita = [False, False, False, False, False, False, False, False, False, False,
           True, True,
-          True, True, True, True, True, True,
-          True, True, True,
+          True, True, True, True, True, True, True,
+          True,
           True, True, True, True, True, True, True, True, True, True, True, True]
 
 AdicionaAoToken = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, False, False]
+
+AdicionaAoTokenEstado = [True, True, True, True, True, True, True, True, False, False,
+                         True, True,
+                         True, True, True, True, True, True, True,
+                         True,
+                         True, True, True, True, True, True, True, True, True, True, True, True]
 
 palavras_chave = {
     "if": 101,
@@ -107,7 +112,7 @@ def analisador_lexico(codigo):
         novo_estado = T[estado][char_code]
         
         if avance(novo_estado):
-            if AdicionaAoToken[char_code]:
+            if AdicionaAoToken[char_code] and AdicionaAoTokenEstado[novo_estado]:
                 token += codigo[i]
             i += 1
         else:
