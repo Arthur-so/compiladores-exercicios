@@ -32,7 +32,7 @@ int get_tipo(char ch) {
             case '!': return 16;
             case '/': return 17;
             default:
-                if (isspace(ch)) {
+                if (isspace(ch) || ch == EOF) {
                     return 18; // Branco
                 } else {
                     return 19; // Outro
@@ -156,15 +156,11 @@ int main(int argc, char **argv) {
     int char_code = 0;
     int novo_estado = 0;
     char c;
-    int count_i = 0;
     int avance = 0;
     while (1) {
-        // if (count_i > 200) {
-        //     break;
-        // }
-
-        //printf("i: %d\n", count_i);
         if (c == EOF) {
+
+            printf("saindo: %c\n", c);
             break;
         }
         if (estado == -1) {
@@ -175,28 +171,32 @@ int main(int argc, char **argv) {
             //classifica_token(token, estado)
             aux_lexeme[char_lexeme_id] = '\0'; // Finaliza o lexema
             printf("%s - estado: %d\n", aux_lexeme, estado);
-            //token = ''
             char_lexeme_id = 0;
         }
+
         c = get_next_char(fptr, buffer);
-        //printf("char lido: %c\n", c);
         char_code = get_tipo(c);
-        //printf("char code: %d\n", char_code);
-        //printf("estado: %d\n", estado);
+        printf("char: %c\n", c);
+        printf("tipo: %d\n", char_code);
+        printf("estado: %d\n", estado);
         novo_estado = T[estado][char_code];
-        //printf("novo estado: %d\n", novo_estado);
         avance = Avance[estado][char_code];
+        printf("novo estado: %d\n", novo_estado);
+        printf("avance: %d\n", avance);
         if (avance) {
-            // printf("avancar\n");
             if (AdicionaAoToken[char_code] && AdicionaAoTokenEstado[novo_estado]) {
-                //printf("adicionado");
                 aux_lexeme[char_lexeme_id++] = c;
             }
             buffer->next_char_id++;
-            //printf("next char: %d\n", buffer->next_char_id);
         }
         estado = novo_estado; 
-        count_i++; 
+    }
+    if (estado == 0 || Aceita[estado]) {
+        printf("Aprovado\n");
+    }
+    else {
+        printf("Reprovado - estado: %d - c: %c\n", estado, c);
+
     }
 
     deallocate_buffer(buffer);
