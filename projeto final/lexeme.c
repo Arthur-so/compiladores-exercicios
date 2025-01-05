@@ -11,6 +11,8 @@ KeyWord key_words[] = {
     {"while", WHILE},
 };
 
+
+
 int is_char(char c) {
     int ascii_code = (int)c;
     if ((ascii_code >= 97 && ascii_code <= 122) || (ascii_code >= 65 && ascii_code <= 90))

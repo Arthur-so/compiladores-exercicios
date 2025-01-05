@@ -104,8 +104,8 @@ def analisador_lexico(codigo):
             break
 
         if Aceita[estado]:
-            #print(f"{token} - estado: {estado}")
-            classifica_token(token, estado)
+            print(f"{token} - estado: {estado}")
+            #classifica_token(token, estado)
             token = ''
 
         char_code = get_tipo(codigo[i])
