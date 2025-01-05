@@ -6,7 +6,7 @@
 // ./main "./lexemas.c"
 
 #define BUFFER_SIZE 256
-
+#define HASH_SIZE 11
 
 int get_tipo(char ch) {
     if (isalpha(ch)) {
@@ -41,7 +41,83 @@ int get_tipo(char ch) {
     }
 }
 
+typedef struct HashNode {
+    char key[10];
+    int value;
+    struct HashNode* next;
+} HashNode;
+
+typedef struct {
+    HashNode* head;
+} HashTable[HASH_SIZE];
+
+unsigned int hash(const char *str) {
+    unsigned int hash = 0;
+    while (*str) {
+        hash = (hash * 31) + *str++;
+    }
+    return hash % HASH_SIZE;
+}
+
+void addToHashTable(HashTable hashTable, const char* key, int value) {
+    unsigned int index = hash(key);
+
+    HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
+    strcpy(newNode->key, key);
+    newNode->value = value;
+    newNode->next = hashTable[index].head; // Insere no início da lista encadeada
+    hashTable[index].head = newNode;
+}
+
+void initializeHashTable(HashTable hashTable) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        hashTable[i].head = NULL; // Inicializa com listas vazias
+    }
+
+    // Adiciona palavras-chave
+    addToHashTable(hashTable, "else", 0);
+    addToHashTable(hashTable, "if", 1);
+    addToHashTable(hashTable, "int", 2);
+    addToHashTable(hashTable, "return", 3);
+    addToHashTable(hashTable, "void", 4);
+    addToHashTable(hashTable, "while", 5);
+}
+
+
+
+int findInHashTable(HashTable hashTable, const char* key) {
+    unsigned int index = hash(key);
+
+    HashNode* current = hashTable[index].head;
+    while (current) {
+        if (strcmp(current->key, key) == 0) {
+            return current->value; // Palavra encontrada
+        }
+        current = current->next;
+    }
+    return 10; // Palavra não encontrada
+}
+
+int classifica_lexema(char* lexema, int estado, HashTable hashTable) {
+    int token = estado;
+    if (estado == 10) {
+        token = findInHashTable(hashTable, lexema);
+    }
+    printf("lexema: %s - token: %d\n", lexema, token);
+    return token;
+}
+
 int main(int argc, char **argv) {
+     HashTable hashTable;
+    initializeHashTable(hashTable);
+
+    // Teste de busca
+    char* testWords[] = {"else", "if", "int", "return", "void", "while", "unknown"};
+    for (int i = 0; i < 7; i++) {
+        printf("Palavra: %s -> Token: %d\n", testWords[i], findInHashTable(hashTable, testWords[i]));
+    }
+    printf("COMECANDOOOO\n");
+
     int Aceita[32] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         1, 1,
@@ -159,7 +235,6 @@ int main(int argc, char **argv) {
     int avance = 0;
     while (1) {
         if (c == EOF) {
-
             printf("saindo: %c\n", c);
             break;
         }
@@ -168,21 +243,18 @@ int main(int argc, char **argv) {
             break;
         }
         if (Aceita[estado]){
-            //classifica_token(token, estado)
             aux_lexeme[char_lexeme_id] = '\0'; // Finaliza o lexema
-            printf("%s - estado: %d\n", aux_lexeme, estado);
+            classifica_lexema(aux_lexeme, estado, hashTable);
+            //printf("%s - estado: %d\n", aux_lexeme, estado);
             char_lexeme_id = 0;
         }
 
         c = get_next_char(fptr, buffer);
         char_code = get_tipo(c);
-        printf("char: %c\n", c);
-        printf("tipo: %d\n", char_code);
-        printf("estado: %d\n", estado);
+        
         novo_estado = T[estado][char_code];
         avance = Avance[estado][char_code];
-        printf("novo estado: %d\n", novo_estado);
-        printf("avance: %d\n", avance);
+        
         if (avance) {
             if (AdicionaAoToken[char_code] && AdicionaAoTokenEstado[novo_estado]) {
                 aux_lexeme[char_lexeme_id++] = c;
