@@ -108,15 +108,8 @@ int classifica_lexema(char* lexema, int estado, HashTable hashTable) {
 }
 
 int main(int argc, char **argv) {
-     HashTable hashTable;
+    HashTable hashTable;
     initializeHashTable(hashTable);
-
-    // Teste de busca
-    char* testWords[] = {"else", "if", "int", "return", "void", "while", "unknown"};
-    for (int i = 0; i < 7; i++) {
-        printf("Palavra: %s -> Token: %d\n", testWords[i], findInHashTable(hashTable, testWords[i]));
-    }
-    printf("COMECANDOOOO\n");
 
     int Aceita[32] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -138,8 +131,8 @@ int main(int argc, char **argv) {
     };
     int T[32][20] = {
         {1, 2, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 3, 4, 5, 6, 7, 0, -1},
-        {1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10},
-        {11, 2, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11},
+        {1, -1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10},
+        {-1, 2, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11},
         {12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 12, 12, 12, 12},
         {14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 14, 14, 14, 14},
         {16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 17, 16, 16, 16, 16},
