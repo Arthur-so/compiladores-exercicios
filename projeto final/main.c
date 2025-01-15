@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "funcs.h"
-#include "lexeme.h"
 #include <ctype.h>
 // ./main "./lexemas.c"
 
@@ -214,10 +213,8 @@ int main(int argc, char **argv) {
     }
 
     Buffer* buffer = allocate_buffer(BUFFER_SIZE);
-    Classification classifier;
     char aux_lexeme[64];
     int char_lexeme_id = 0;
-    enum Token token;
     int is_chain_char = 0;
     int is_chain_number = 0; 
 
