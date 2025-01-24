@@ -1,6 +1,9 @@
 #include <string.h>
+#include "funcs.h"
 
-enum Token {
+#define HASH_SIZE 11
+
+enum TokenId {
     ID = 10,
     NUM = 11,
     GREATER = 12,
@@ -26,7 +29,36 @@ enum Token {
 };
 
 typedef struct {
-    int line;
+    char current_lexeme[64];
+    int current_state;
+    Buffer *buffer;
+    HashTable *hash_table;
+    FILE *file;
+    Token *token;
+} Lexer;
+
+typedef struct {
+    enum TokenId token_id;
     char lexeme[64];
-    enum Token token;
-} Classification;
+    int line;
+    int column;
+} Token;
+
+typedef struct HashNode {
+    char key[10];
+    int value;
+    struct HashNode* next;
+} HashNode;
+
+typedef struct {
+    HashNode* head;
+} HashTable[HASH_SIZE];
+
+unsigned int hash(const char *str);
+int get_tipo(char ch);
+void addToHashTable(HashTable hashTable, const char* key, int value);
+void initializeHashTable(HashTable hashTable);
+int findInHashTable(HashTable hashTable, const char* key);
+
+Lexer *initialize_lexer(const char *filename, int buffer_size);
+int classifica_lexema(char* lexema, int estado, HashTable hashTable);
