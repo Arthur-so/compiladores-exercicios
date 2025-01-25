@@ -1,5 +1,6 @@
 #include "lexeme.h"
 
+
 Token* get_token(Lexer *lexer) {
     char c;
     int char_lexeme_id = 0;
@@ -7,28 +8,28 @@ Token* get_token(Lexer *lexer) {
     int char_code = 0;
     int novo_estado = 0;
     int avance = 0;
-
     while (1) {
         if (c == EOF) {
-            printf("saindo: %c\n", c);
+            lexer->token->done = 1;
             break;
         }
         if (lexer->current_state == -1) {
-            printf("DEU ERRO");
+            //printf("DEU ERRO");
+            lexer->token->error = 1;
             break;
         }
         if (Aceita[lexer->current_state]){
             aux_lexeme[char_lexeme_id] = '\0'; // Finaliza o lexema
             
-            lexer->token->token_id = classifica_lexema(aux_lexeme, lexer->current_state, lexer->hash_table);
+            lexer->token->token_id = classifica_lexema(aux_lexeme, lexer->current_state);
             lexer->token->line = lexer->buffer->next_char_line;
             lexer->token->column = lexer->buffer->next_char_id;
-            lexer->token->lexeme = aux_lexeme;
-            
+            strncpy(lexer->token->lexeme, aux_lexeme, sizeof(lexer->token->lexeme));            
+            lexer->current_state = 0;
             return lexer->token;
             //printf("%s - estado: %d\n", aux_lexeme, estado);
         }
-
+        
         c = get_next_char(lexer->file, lexer->buffer);
         char_code = get_tipo(c);
         
@@ -53,13 +54,27 @@ Token* get_token(Lexer *lexer) {
     return lexer->token;
 }
 
-int classifica_lexema(char* lexema, int estado, HashTable hashTable) {
+int classifica_lexema(char* lexeme, int estado) {
     int token = estado;
-    if (estado == 10) {
-        token = findInHashTable(hashTable, lexema);
+    
+    if (estado == ID) {
+        const char* keywords[] = {
+            "else", "if", "int", "return", "void", "while"
+        };
+        const int keyword_ids[] = {
+            0, 1, 2, 3, 4, 5
+        };
+        int num_keywords = sizeof(keywords) / sizeof(keywords[0]);
+
+        // Comparação direta com as palavras-chave
+        for (int i = 0; i < num_keywords; i++) {
+            if (strcmp(lexeme, keywords[i]) == 0) {
+                token = keyword_ids[i]; // Retorna o ID correspondente
+            }
+        }
     }
-    printf("lexema: %s - token: %d\n", lexema, token);
-    return token;
+
+    return token; // Retorna o ID padrão para identificadores (ID)
 }
 
 Lexer *initialize_lexer(const char *filename, int buffer_size) {
@@ -70,17 +85,16 @@ Lexer *initialize_lexer(const char *filename, int buffer_size) {
     }
 
     Buffer *buffer = allocate_buffer(buffer_size);
-    HashTable * hash_table = (HashTable *)malloc(sizeof(HashTable));
     Token * token = (Token *)malloc(sizeof(Token));
-    initializeHashTable(hash_table);
 
     Lexer *lexer = (Lexer *)malloc(sizeof(Lexer));
     lexer->buffer = buffer;
     lexer->current_state = 0;
     lexer->current_lexeme[0] = '\0';
-    lexer->hash_table = hash_table;
     lexer->file = file;
     lexer->token = token;
+    lexer->token->error = 0;
+    lexer->token->done = 0;
 
     return lexer;
 }
@@ -88,55 +102,9 @@ Lexer *initialize_lexer(const char *filename, int buffer_size) {
 void destroy_lexer(Lexer *lexer) {
     if (!lexer) return;
     deallocate_buffer(lexer->buffer);
-    free(lexer->hash_table);
     free(lexer->token);
     fclose(lexer->file);
     free(lexer);
-}
-
-void addToHashTable(HashTable hashTable, const char* key, int value) {
-    unsigned int index = hash(key);
-
-    HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
-    strcpy(newNode->key, key);
-    newNode->value = value;
-    newNode->next = hashTable[index].head; // Insere no início da lista encadeada
-    hashTable[index].head = newNode;
-}
-
-void initializeHashTable(HashTable hashTable) {
-    for (int i = 0; i < HASH_SIZE; i++) {
-        hashTable[i].head = NULL; // Inicializa com listas vazias
-    }
-
-    // Adiciona palavras-chave
-    addToHashTable(hashTable, "else", 0);
-    addToHashTable(hashTable, "if", 1);
-    addToHashTable(hashTable, "int", 2);
-    addToHashTable(hashTable, "return", 3);
-    addToHashTable(hashTable, "void", 4);
-    addToHashTable(hashTable, "while", 5);
-}
-
-int findInHashTable(HashTable hashTable, const char* key) {
-    unsigned int index = hash(key);
-
-    HashNode* current = hashTable[index].head;
-    while (current) {
-        if (strcmp(current->key, key) == 0) {
-            return current->value; // Palavra encontrada
-        }
-        current = current->next;
-    }
-    return 10; // Palavra não encontrada
-}
-
-unsigned int hash(const char *str) {
-    unsigned int hash = 0;
-    while (*str) {
-        hash = (hash * 31) + *str++;
-    }
-    return hash % HASH_SIZE;
 }
 
 int get_tipo(char ch) {
@@ -172,25 +140,25 @@ int get_tipo(char ch) {
     }
 }
 
-static int Aceita[32] = {
+ int Aceita[32] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     1, 1,
     1, 1, 1, 1, 1, 1, 1,
     1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
-static int AdicionaAoToken[20] = {
+ int AdicionaAoToken[20] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 0, 0
 };
-static int AdicionaAoTokenEstado[32] = {
+ int AdicionaAoTokenEstado[32] = {
     1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
     1, 1,
     1, 1, 1, 1, 1, 1, 1,
     1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 };
-static int T[32][20] = {
+ int T[32][20] = {
     {1, 2, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 3, 4, 5, 6, 7, 0, -1},
     {1, -1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10},
     {-1, 2, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11},
@@ -226,7 +194,7 @@ static int T[32][20] = {
 };
 
 
-static int Avance[32][20] = {
+ int Avance[32][20] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},

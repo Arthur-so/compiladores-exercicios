@@ -14,9 +14,22 @@ int main(int argc, char **argv) {
     char* filename = argv[1];
     Lexer* lexer = initialize_lexer(filename, BUFFER_SIZE);
     Token* token;
+    int count = 0;
     while (1) {
         token = get_token(lexer);
-        printf("%s : %d", token->lexeme, token->token_id);
+        if (token->error) {
+            printf("deu erro");
+            break;
+        }
+        printf("%s : %d\n", token->lexeme, token->token_id);
+        if (token->done) {
+            printf("acabou");
+            break;
+        }
+
+        // if (count == 20)
+        //     break;
+        // count++;
     }
-    return EXIT_SUCCESS;
+    return 0;
 }
