@@ -14,8 +14,16 @@ Token* get_token(Lexer *lexer) {
             break;
         }
         if (lexer->current_state == -1) {
-            //printf("DEU ERRO");
+            
+            aux_lexeme[char_lexeme_id++] = c;
+            aux_lexeme[char_lexeme_id] = '\0';
+            lexer->buffer->next_char_id++;
+
             lexer->token->error = 1;
+            strncpy(lexer->token->lexeme, aux_lexeme, sizeof(lexer->token->lexeme)); 
+            lexer->token->line = lexer->buffer->next_char_line;
+            lexer->token->column = lexer->buffer->next_char_id;
+
             break;
         }
         if (Aceita[lexer->current_state]){
@@ -27,7 +35,6 @@ Token* get_token(Lexer *lexer) {
             strncpy(lexer->token->lexeme, aux_lexeme, sizeof(lexer->token->lexeme));            
             lexer->current_state = 0;
             return lexer->token;
-            //printf("%s - estado: %d\n", aux_lexeme, estado);
         }
         
         c = get_next_char(lexer->file, lexer->buffer);
@@ -37,19 +44,25 @@ Token* get_token(Lexer *lexer) {
         avance = Avance[lexer->current_state][char_code];
         
         if (avance) {
-            if (AdicionaAoToken[char_code] && AdicionaAoTokenEstado[novo_estado]) {
+            if (AdicionaAoToken[char_code] && (AdicionaAoTokenEstado[novo_estado] || AdicionaAoTokenEstado[lexer->current_state])) {
                 aux_lexeme[char_lexeme_id++] = c;
             }
             lexer->buffer->next_char_id++;
         }
         lexer->current_state = novo_estado; 
     }
-    if (lexer->current_state == 0 || Aceita[lexer->current_state]) {
-        printf("Aprovado\n");
-    }
-    else {
-        printf("Reprovado - estado: %d - c: %c\n", lexer->current_state, c);
-        lexer->token->token_id = -1;
+    if (lexer->current_state != 0 && Aceita[lexer->current_state] == 0) {
+        if (AdicionaAoTokenEstado[novo_estado] || AdicionaAoTokenEstado[lexer->current_state]) {
+            aux_lexeme[char_lexeme_id++] = c;
+            lexer->buffer->next_char_id++;
+        }
+        aux_lexeme[char_lexeme_id] = '\0';
+
+
+        lexer->token->error = 1;
+        strncpy(lexer->token->lexeme, aux_lexeme, sizeof(lexer->token->lexeme)); 
+        lexer->token->line = lexer->buffer->next_char_line;
+        lexer->token->column = lexer->buffer->next_char_id;
     }
     return lexer->token;
 }
@@ -74,7 +87,7 @@ int classifica_lexema(char* lexeme, int estado) {
         }
     }
 
-    return token; // Retorna o ID padrão para identificadores (ID)
+    return token;
 }
 
 Lexer *initialize_lexer(const char *filename, int buffer_size) {
@@ -160,13 +173,13 @@ int get_tipo(char ch) {
 };
  int T[32][20] = {
     {1, 2, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 3, 4, 5, 6, 7, 0, -1},
-    {1, -1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10},
-    {-1, 2, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11},
-    {12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 12, 12, 12, 12},
-    {14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 14, 14, 14, 14},
-    {16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 17, 16, 16, 16, 16},
+    {1, -1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, -1},
+    {-1, 2, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, -1},
+    {12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 12, 12, 12, -1},
+    {14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 14, 14, 14, -1},
+    {16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 17, 16, 16, 16, -1},
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 18, -1, -1, -1, -1},
-    {31, 31, 31, 31, 8, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31},
+    {31, 31, 31, 31, 8, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, -1},
     {8, 8, 8, 8, 9, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8},
     {8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 19, 8, 8},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, // Estado 10
@@ -195,13 +208,13 @@ int get_tipo(char ch) {
 
 
  int Avance[32][20] = {
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
     {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
