@@ -1,6 +1,6 @@
 #include "lexeme.h"
 
-Token get_token(Lexer *lexer) {
+Token* get_token(Lexer *lexer) {
     char c;
     int char_lexeme_id = 0;
     char aux_lexeme[64];

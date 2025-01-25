@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "lexeme.h": "c"
+        "lexeme.h": "c",
+        "ctype.h": "c"
     }
 }

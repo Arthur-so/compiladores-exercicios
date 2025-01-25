@@ -1,6 +1,6 @@
 #include <string.h>
 #include "funcs.h"
-
+#include <ctype.h>
 #define HASH_SIZE 11
 
 enum TokenId {
@@ -62,3 +62,5 @@ int findInHashTable(HashTable hashTable, const char* key);
 
 Lexer *initialize_lexer(const char *filename, int buffer_size);
 int classifica_lexema(char* lexema, int estado, HashTable hashTable);
+Token* get_token(Lexer *lexer);
+
