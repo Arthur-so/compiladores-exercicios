@@ -256,72 +256,80 @@ int classifica_lexema(char* lexeme, int estado) {
 Token* get_token(Lexer *lexer) {
     char c = 0;
     int char_lexeme_id = 0;
-    char aux_lex[64] = {0};
-    int char_code=0, novo_estado=0, avance=0;
+    char aux_lexeme[64];
+    int char_code = 0;
+    int novo_estado = 0;
+    int avance = 0;
 
     lexer->token->error = 0;
     lexer->token->done = 0;
+    memset(aux_lexeme, 0, sizeof(aux_lexeme));
 
     while (1) {
+        /* Se c == EOF => fim de arquivo */
         if (c == EOF) {
             lexer->token->done = 1;
-            break;
+            return lexer->token;
         }
+
+        /* ---------- TRATAMENTO DE ERRO LÉXICO ---------- */
         if (lexer->current_state == -1) {
-            /* estado de erro */
-            aux_lex[char_lexeme_id++] = c;
-            aux_lex[char_lexeme_id] = '\0';
+            /* Guardamos o char que causou o erro */
+            aux_lexeme[char_lexeme_id++] = c;
+            aux_lexeme[char_lexeme_id] = '\0';
             lexer->buffer->next_char_id++;
 
+            /* Marcamos erro e preenchemos token */
             lexer->token->error = 1;
-            strncpy(lexer->token->lexeme, aux_lex, 63);
+            strncpy(lexer->token->lexeme, aux_lexeme, sizeof(lexer->token->lexeme));
             lexer->token->line = lexer->buffer->next_char_line;
             lexer->token->column = lexer->buffer->next_char_id;
-            break;
+
+            /* Em vez de break, RETORNAMOS O TOKEN AGORA! */
+            return lexer->token;
         }
-        /* Se estado atual é de aceitação: finalize token */
+
+        /* ---------- VERIFICA SE ESTADO É DE ACEITAÇÃO ---------- */
         if (Aceita[lexer->current_state]) {
-            aux_lex[char_lexeme_id] = '\0';
-            lexer->token->token_code = classifica_lexema(aux_lex, lexer->current_state);
+            aux_lexeme[char_lexeme_id] = '\0';
+
+            /* classifica_lexema decide se é ID, NUM, etc. */
+            lexer->token->token_code = classifica_lexema(aux_lexeme, lexer->current_state);
             lexer->token->line   = lexer->buffer->next_char_line;
             lexer->token->column = lexer->buffer->next_char_id;
-            strncpy(lexer->token->lexeme, aux_lex, 63);
+            strncpy(lexer->token->lexeme, aux_lexeme, sizeof(lexer->token->lexeme));
 
             lexer->current_state = 0;
             return lexer->token;
         }
 
-        /* Pega próximo char */
+        /* Lê próximo caractere */
         c = get_next_char(lexer->file, lexer->buffer);
         if (c == EOF) {
             lexer->token->done = 1;
-            break;
+            return lexer->token;
         }
 
+        /* Consulta tabela de transição */
         char_code = get_tipo(c);
         novo_estado = T[lexer->current_state][char_code];
         avance = Avance[lexer->current_state][char_code];
 
+        /* Se for pra avançar, adiciona char no aux_lexeme se apropriado */
         if (avance) {
-            if (AdicionaAoToken[char_code] && 
-                (AdicionaAoTokenEstado[novo_estado] || AdicionaAoTokenEstado[lexer->current_state])) {
-                aux_lex[char_lexeme_id++] = c;
+            if (AdicionaAoToken[char_code] &&
+                (AdicionaAoTokenEstado[novo_estado] || 
+                 AdicionaAoTokenEstado[lexer->current_state])) 
+            {
+                aux_lexeme[char_lexeme_id++] = c;
             }
             lexer->buffer->next_char_id++;
         }
+
         lexer->current_state = novo_estado;
     }
 
-    /* Se chegou aqui e não aceitou = erro, a não ser que seja EOF */
-    if (!lexer->token->done && lexer->current_state != 0 && Aceita[lexer->current_state] == 0) {
-        aux_lex[char_lexeme_id++] = c;
-        aux_lex[char_lexeme_id] = '\0';
-
-        lexer->token->error = 1;
-        strncpy(lexer->token->lexeme, aux_lex, 63);
-        lexer->token->line   = lexer->buffer->next_char_line;
-        lexer->token->column = lexer->buffer->next_char_id;
-    }
+    /* Se chegou aqui de forma não usual, retorne token */
     return lexer->token;
 }
 
