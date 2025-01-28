@@ -1,54 +1,3 @@
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <string.h>
-
-// #include "lexeme.h"
-// #include "ast.h"
-
-// /* Função gerada pelo Bison */
-// extern int yyparse();
-
-// /* Raiz da AST, declarada em parser.y como 'extern' */
-// extern AST *g_root;
-
-// /* O lexer global, usado em lexer_adapter.c */
-// Lexer *lexer = NULL;
-
-// int main(int argc, char **argv) {
-//     if (argc < 2) {
-//         fprintf(stderr, "Uso: %s <arquivo> [-p]\n", argv[0]);
-//         return 1;
-//     }
-
-//     int print_ast = 0;
-//     /* Se tiver segundo argumento e for -p ou -P */
-//     if (argc > 2 && (strcmp(argv[2],"-p")==0 || strcmp(argv[2],"-P")==0)) {
-//         print_ast = 1;
-//     }
-
-//     /* Inicializa o lexer */
-//     lexer = initialize_lexer(argv[1], 256);
-//     if (!lexer) {
-//         fprintf(stderr, "Falha ao abrir arquivo '%s'.\n", argv[1]);
-//         return 1;
-//     }
-
-//     /* Chama o parser (Bison) */
-//     int ret = yyparse();
-//     if (ret == 0) {
-//         /* Sem erros sintáticos */
-//         if (print_ast && g_root) {
-//             printAST(g_root);
-//         }
-//     } else {
-//         printf("Houve erro(s) sintático(s).\n");
-//     }
-
-//     /* Libera */
-//     destroy_lexer(lexer);
-//     return 0;
-// }
-/* main.c */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -87,7 +36,7 @@ void doLexicalAnalysisOnly(Lexer *lexer) {
             break;
         }
 
-        if (t->token_code == /* L_COMMENT ou algo interno? */ 119) {
+        if (t->token_code == L_COMMENT) {
             // Se for comentário, ignore
             continue;
         }

@@ -4,60 +4,6 @@
 #include <ctype.h>
 #include "lexeme.h"
 
-/* ---------------------------
-   Códigos internos do lexer
-   --------------------------- */
-#define L_KW_ELSE      100
-#define L_KW_IF        101
-#define L_KW_INT       102
-#define L_KW_RETURN    103
-#define L_KW_VOID      104
-#define L_KW_WHILE     105
-#define L_ID           110
-#define L_NUM          111
-#define L_GREATER      112
-#define L_GREATER_EQ   113
-#define L_MINOR        114
-#define L_MINOR_EQ     115
-#define L_EQUAL        116
-#define L_EQUAL_EQ     117
-#define L_DIFF         118
-#define L_COMMENT      119
-#define L_PLUS         120
-#define L_MINUS        121
-#define L_MULT         122
-#define L_SEMICOLON    123
-#define L_COMMA        124
-#define L_OPAREN       125
-#define L_CPAREN       126
-#define L_OBRACK       127
-#define L_CBRACK       128
-#define L_OCURLY       129
-#define L_CCURLY       130
-#define L_SLASH        131
-
-#define ST_ID          10
-#define ST_NUM         11
-#define ST_GREATER     12
-#define ST_GREATER_EQ  13
-#define ST_MINOR       14
-#define ST_MINOR_EQ    15
-#define ST_EQUAL       16
-#define ST_EQUAL_EQ    17
-#define ST_DIFF        18
-#define ST_COMMENT     19
-#define ST_PLUS        20
-#define ST_MINUS       21
-#define ST_MULT        22
-#define ST_SEMICOLON   23
-#define ST_COMMA       24
-#define ST_OPAREN      25
-#define ST_CPAREN      26
-#define ST_OBRACK      27
-#define ST_CBRACK      28
-#define ST_OCURLY      29
-#define ST_CCURLY      30
-#define ST_SLASH       31
 
 /* ---------------------------------------------------------
    1) Funções do Buffer
@@ -204,70 +150,6 @@ int classifica_lexema(char* lexeme, int estado) {
         else if (strcmp(lexeme,"return")==0) code = L_KW_RETURN;
         else if (strcmp(lexeme,"void")==0) code = L_KW_VOID;
         else if (strcmp(lexeme,"while")==0) code = L_KW_WHILE;
-        else code = L_ID;
-    }
-    else if (estado == 11) {
-        code = L_NUM;
-    }
-    else if (estado == 12) {
-        code = L_GREATER;
-    }
-    else if (estado == 13) {
-        code = L_GREATER_EQ;
-    }
-    else if (estado == 14) {
-        code = L_MINOR;
-    }
-    else if (estado == 15) {
-        code = L_MINOR_EQ;
-    }
-    else if (estado == 16) {
-        code = L_EQUAL;
-    }
-    else if (estado == 17) {
-        code = L_EQUAL_EQ;
-    }
-    else if (estado == 18) {
-        code = L_DIFF;
-    }
-    else if (estado == 19) {
-        code = L_COMMENT;
-    }
-    else if (estado == 20) {
-        code = L_PLUS;
-    }
-    else if (estado == 21) {
-        code = L_MINUS;
-    }
-    else if (estado == 22) {
-        code = L_MULT;
-    }
-    else if (estado == 23) {
-        code = L_SEMICOLON;
-    }
-    else if (estado == 24) {
-        code = L_COMMA;
-    }
-    else if (estado == 25) {
-        code = L_OPAREN;
-    }
-    else if (estado == 26) {
-        code = L_CPAREN;
-    }
-    else if (estado == 27) {
-        code = L_OBRACK;
-    }
-    else if (estado == 28) {
-        code = L_CBRACK;
-    }
-    else if (estado == 29) {
-        code = L_OCURLY;
-    }
-    else if (estado == 30) {
-        code = L_CCURLY;
-    }
-    else if (estado == 31) {
-        code = L_SLASH;
     }
 
     return code;
@@ -384,70 +266,71 @@ int AdicionaAoTokenEstado[32] = {
 /* ------------------------------------------------------------------------- *
  *  Tabela de Transição T[32][20]
  *  As linhas (estados) vão de 0 a 31
- *  Estados 10..31 são finais (ST_...), retornam diretamente o token
+ *  Estados 10..31 são finais (L_...), retornam diretamente o token
  * ------------------------------------------------------------------------- */
 
 int T[32][20] = {
     /*                      Colunas:
        0   1      2        3        4        5         6         7         8         9
        L   D      +        -        *        ;         ,         (         )         [
-
-      10  11    12       13       14       15        16        17        18        19
-      ]   {      }        >        <        =         !         /         B         outro
+      
+      10  11     12       13       14       15        16        17        18       19
+      ]   {      }        >        <        =         !         /         B        outro
     */
 
     /*------------------------------------------------------------------------------------*
      * Estado 0
      *------------------------------------------------------------------------------------*/
-    {  1,  2,  ST_PLUS,  ST_MINUS, ST_MULT,  ST_SEMICOLON, ST_COMMA, ST_OPAREN, ST_CPAREN, ST_OBRACK,
-       ST_CBRACK, ST_OCURLY, ST_CCURLY, 3,       4,          5,       6,        7,        0,       -1 },
+    {  1,  2,  L_PLUS,   L_MINUS,  L_MULT,   L_SEMICOLON, L_COMMA, L_OPAREN, L_CPAREN, L_OBRACK,
+       L_CBRACK, L_OCURLY, L_CCURLY, 3,        4,           5,        6,       7,        0,        -1 },
 
     /*------------------------------------------------------------------------------------*
-     * Estado 1 (letra) => ainda formando um ID
+     * Estado 1 (letra) => formando um ID
      *------------------------------------------------------------------------------------*/
-    {  1, -1,  ST_ID,    ST_ID,    ST_ID,    ST_ID,        ST_ID,    ST_ID,    ST_ID,     ST_ID,
-       ST_ID,   ST_ID,   ST_ID,    ST_ID,    ST_ID,        ST_ID,    ST_ID,    ST_ID,     ST_ID,   -1 },
+    {  1, -1,  L_ID,     L_ID,     L_ID,     L_ID,         L_ID,     L_ID,    L_ID,     L_ID,
+       L_ID,   L_ID,     L_ID,     L_ID,     L_ID,         L_ID,     L_ID,    L_ID,     L_ID,     -1 },
 
     /*------------------------------------------------------------------------------------*
-     * Estado 2 (dígito) => ainda formando um NUM
+     * Estado 2 (dígito) => formando um NUM
      *------------------------------------------------------------------------------------*/
-    { -1,  2,  ST_NUM,   ST_NUM,   ST_NUM,   ST_NUM,       ST_NUM,   ST_NUM,   ST_NUM,    ST_NUM,
-       ST_NUM,  ST_NUM,  ST_NUM,   ST_NUM,   ST_NUM,       ST_NUM,   ST_NUM,   ST_NUM,    ST_NUM,  -1 },
+    { -1,  2,  L_NUM,    L_NUM,    L_NUM,    L_NUM,        L_NUM,    L_NUM,   L_NUM,    L_NUM,
+       L_NUM,  L_NUM,    L_NUM,    L_NUM,    L_NUM,        L_NUM,    L_NUM,   L_NUM,    L_NUM,    -1 },
 
     /*------------------------------------------------------------------------------------*
      * Estado 3 (>x)
      *------------------------------------------------------------------------------------*/
-    { ST_GREATER, ST_GREATER, ST_GREATER,  ST_GREATER,  ST_GREATER, ST_GREATER, ST_GREATER, ST_GREATER, 
-      ST_GREATER, ST_GREATER, ST_GREATER,  ST_GREATER,  ST_GREATER, ST_GREATER, ST_GREATER, ST_GREATER_EQ,
-      ST_GREATER, ST_GREATER, ST_GREATER,  -1 },
+    { L_GREATER, L_GREATER, L_GREATER,  L_GREATER,  L_GREATER,  L_GREATER, 
+      L_GREATER, L_GREATER, L_GREATER,  L_GREATER,  L_GREATER,  L_GREATER,
+      L_GREATER, L_GREATER, L_GREATER,  L_GREATER_EQ,
+      L_GREATER, L_GREATER, L_GREATER,  -1 },
 
     /*------------------------------------------------------------------------------------*
      * Estado 4 (<x)
      *------------------------------------------------------------------------------------*/
-    { ST_MINOR, ST_MINOR, ST_MINOR, ST_MINOR, ST_MINOR, ST_MINOR, ST_MINOR, ST_MINOR,
-      ST_MINOR, ST_MINOR, ST_MINOR, ST_MINOR, ST_MINOR, ST_MINOR, ST_MINOR, ST_MINOR_EQ,
-      ST_MINOR, ST_MINOR, ST_MINOR, -1 },
+    { L_MINOR, L_MINOR, L_MINOR, L_MINOR, L_MINOR, L_MINOR, L_MINOR, L_MINOR,
+      L_MINOR, L_MINOR, L_MINOR, L_MINOR, L_MINOR, L_MINOR, L_MINOR, L_MINOR_EQ,
+      L_MINOR, L_MINOR, L_MINOR, -1 },
 
     /*------------------------------------------------------------------------------------*
      * Estado 5 (=x)
      *------------------------------------------------------------------------------------*/
-    { ST_EQUAL, ST_EQUAL, ST_EQUAL, ST_EQUAL, ST_EQUAL, ST_EQUAL, ST_EQUAL, ST_EQUAL,
-      ST_EQUAL, ST_EQUAL, ST_EQUAL, ST_EQUAL, ST_EQUAL, ST_EQUAL, ST_EQUAL, ST_EQUAL_EQ,
-      ST_EQUAL, ST_EQUAL, ST_EQUAL, -1 },
+    { L_EQUAL, L_EQUAL, L_EQUAL, L_EQUAL, L_EQUAL, L_EQUAL, L_EQUAL, L_EQUAL,
+      L_EQUAL, L_EQUAL, L_EQUAL, L_EQUAL, L_EQUAL, L_EQUAL, L_EQUAL, L_EQUAL_EQ,
+      L_EQUAL, L_EQUAL, L_EQUAL, -1 },
 
     /*------------------------------------------------------------------------------------*
      * Estado 6 (!x)
      *------------------------------------------------------------------------------------*/
     { -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, ST_DIFF,
+      -1, -1, -1, -1, -1, -1, -1, L_DIFF,
       -1, -1, -1, -1 },
 
     /*------------------------------------------------------------------------------------*
      * Estado 7 (/x)
      *------------------------------------------------------------------------------------*/
-    { ST_SLASH, ST_SLASH, ST_SLASH, ST_SLASH, 8,        ST_SLASH, ST_SLASH, ST_SLASH,
-      ST_SLASH, ST_SLASH, ST_SLASH, ST_SLASH, ST_SLASH, ST_SLASH, ST_SLASH, ST_SLASH,
-      ST_SLASH, ST_SLASH, ST_SLASH, -1 },
+    { L_SLASH, L_SLASH, L_SLASH, L_SLASH,  8,       L_SLASH, L_SLASH, L_SLASH,
+      L_SLASH, L_SLASH, L_SLASH, L_SLASH, L_SLASH, L_SLASH, L_SLASH, L_SLASH,
+      L_SLASH, L_SLASH, L_SLASH, -1 },
 
     /*------------------------------------------------------------------------------------*
      * Estado 8 (/*xxx)
@@ -461,76 +344,76 @@ int T[32][20] = {
      *------------------------------------------------------------------------------------*/
     { 8, 8, 8, 8, 8, 8, 8, 8,
       8, 8, 8, 8, 8, 8, 8, 8,
-      8, ST_COMMENT, 8, 8 },
+      8, L_COMMENT, 8, 8 },
 
     /*------------------------------------------------------------------------------------*
-     * A partir daqui (10..31) são estados finais diretos (retornam token) => 0 em todas colunas
+     * A partir de 10..31 são estados finais => 0 em todas as colunas
      *------------------------------------------------------------------------------------*/
 
-    /* Estado 10: ST_ID */
+    /* Estado 10: L_ID */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 11: ST_NUM */
+    /* Estado 11: L_NUM */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 12: ST_GREATER */
+    /* Estado 12: L_GREATER */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 13: ST_GREATER_EQ */
+    /* Estado 13: L_GREATER_EQ */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 14: ST_MINOR */
+    /* Estado 14: L_MINOR */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 15: ST_MINOR_EQ */
+    /* Estado 15: L_MINOR_EQ */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 16: ST_EQUAL */
+    /* Estado 16: L_EQUAL */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 17: ST_EQUAL_EQ */
+    /* Estado 17: L_EQUAL_EQ */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 18: ST_DIFF */
+    /* Estado 18: L_DIFF */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 19: ST_COMMENT */
+    /* Estado 19: L_COMMENT */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 20: ST_PLUS */
+    /* Estado 20: L_PLUS */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 21: ST_MINUS */
+    /* Estado 21: L_MINUS */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 22: ST_MULT */
+    /* Estado 22: L_MULT */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 23: ST_SEMICOLON */
+    /* Estado 23: L_SEMICOLON */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 24: ST_COMMA */
+    /* Estado 24: L_COMMA */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 25: ST_OPAREN */
+    /* Estado 25: L_OPAREN */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 26: ST_CPAREN */
+    /* Estado 26: L_CPAREN */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 27: ST_OBRACK */
+    /* Estado 27: L_OBRACK */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 28: ST_CBRACK */
+    /* Estado 28: L_CBRACK */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 29: ST_OCURLY */
+    /* Estado 29: L_OCURLY */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 30: ST_CCURLY */
+    /* Estado 30: L_CCURLY */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-    /* Estado 31: ST_SLASH */
+    /* Estado 31: L_SLASH */
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 
 };
