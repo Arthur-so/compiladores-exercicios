@@ -3,18 +3,14 @@
 #include <string.h>
 
 #include "lexeme.h"
-#include "ast.h"  /* se você usa AST */
-extern AST *g_root;    /* definido em parser.y */
+#include "ast.h"
+#include "symtab.h"    /* NOVO */
+#include "semantic.h"  /* buildSymtab, checkSemantics */
 
-extern int yyparse();  /* gerado pelo Bison */
+extern AST *g_root;    
+extern int yyparse();
+
 Lexer *lexer = NULL;
-/* 
-   Se você está guardando em yylex() o último lexema para erro sintático, 
-   pode querer extern as variáveis do parser.y, ex.:
-   extern char g_last_lexeme[64];
-   extern int g_last_line;
-   extern int g_last_col;
-*/
 
 /* Função para fazer somente a varredura léxica e imprimir tokens */
 void doLexicalAnalysisOnly(Lexer *lexer) {
@@ -52,46 +48,48 @@ void doLexicalAnalysisOnly(Lexer *lexer) {
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        fprintf(stderr, "Uso: %s <arquivo> [opções]\n", argv[0]);
-        fprintf(stderr, "Opções:\n");
-        fprintf(stderr, "  -l ou -L  => modo apenas léxico\n");
-        fprintf(stderr, "  -p ou -P  => modo sintático + print da AST\n");
+        fprintf(stderr,"Uso: %s <arquivo> [opções]\n", argv[0]);
         return 1;
     }
 
-    int only_lex = 0;
-    int print_ast = 0;
+    int only_lex = 0, print_ast = 0, print_symtab = 0;
 
-    /* Varre os argumentos */
-    for (int i = 2; i < argc; i++) {
-        if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "-L") == 0) {
-            only_lex = 1;
-        } else if (strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "-P") == 0) {
-            print_ast = 1;
-        }
+    /* Verifica flags */
+    for (int i=2; i<argc; i++) {
+        if (!strcmp(argv[i],"-l") || !strcmp(argv[i],"-L")) only_lex = 1;
+        else if (!strcmp(argv[i],"-p") || !strcmp(argv[i],"-P")) print_ast = 1;
+        else if (!strcmp(argv[i],"-s") || !strcmp(argv[i],"-S")) print_symtab = 1;
     }
 
-    /* Inicializa o lexer */
-    lexer = initialize_lexer(argv[1], 256);
+    lexer = initialize_lexer(argv[1],256);
     if (!lexer) {
-        fprintf(stderr, "Falha ao abrir arquivo: %s\n", argv[1]);
+        fprintf(stderr,"Falha ao abrir arquivo: %s\n", argv[1]);
         return 1;
     }
 
-    /* Se for apenas léxico, chamamos doLexicalAnalysisOnly */
     if (only_lex) {
         doLexicalAnalysisOnly(lexer);
         destroy_lexer(lexer);
         return 0;
     }
 
-    /* Caso contrário, chamamos o parser (que invoca yylex()) */
     int ret = yyparse();
     if (ret == 0) {
-        // Nenhum erro sintático
-        if (print_ast && g_root) {
-            // Imprime AST
-            printAST(g_root);
+        // Parsing OK
+        if (g_root) {
+            /* 1) Monta a Tabela de Símbolos */
+            buildSymtab(g_root);
+            /* 2) Verifica semântica */
+            checkSemantics(g_root);
+
+            /* 3) Se for AST */
+            if (print_ast) {
+                printAST(g_root);
+            }
+            /* 4) Se for Tabela de Símbolos */
+            if (print_symtab) {
+                printSymTab();
+            }
         }
     } else {
         printf("Houve erro(s) sintático(s).\n");

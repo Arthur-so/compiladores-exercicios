@@ -1,3 +1,4 @@
+/* parser.y */
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,11 +18,6 @@ int  g_last_col    = 1;
 
 /* Raiz da AST final */
 AST *g_root = NULL;
-
-/* Se você estiver usando 'extern Lexer *lexer;' 
-   pode declará-lo aqui ou em outro lugar, por exemplo:
-   extern Lexer *lexer;
-*/
 %}
 
 /* Se quisermos AST como valor semântico das regras... */
@@ -34,7 +30,7 @@ AST *g_root = NULL;
 /* Associa cada token ou não-terminal a um tipo do %union, se necessário */
 %type <ast> programa declaracao_lista declaracao var_declaracao fun_declaracao tipo_especificador params param_lista param composto_decl local_declaracoes statement_lista statement expressao_decl selecao_decl iteracao_decl retorno_decl expressao var simples_expressao relacional soma_expressao soma termo mult fator ativacao args arg_lista
 
-/* Tokens do Bison (Bison vai gerar #define ID 258, NUM 259, etc.) */
+/* Tokens do Bison */
 %token <str> ID
 %token <ival> NUM
 %token IF ELSE INT RETURN VOID WHILE
@@ -50,16 +46,14 @@ AST *g_root = NULL;
 
 %%
 
-/* ------------------------------------------------------------------
-   GRAMÁTICA DO C– (com construção de AST)
-   ------------------------------------------------------------------ */
-
 /* programa -> declaracao_lista */
 programa:
     declaracao_lista
     {
         /* A raiz da AST é a lista de declarações */
-        g_root = $1;
+        AST *node = newASTNodeLine("programa", g_last_line);
+        addChild(node, $1);
+        g_root = node;
     }
     ;
 
@@ -67,14 +61,14 @@ programa:
 declaracao_lista:
       declaracao_lista declaracao
       {
-        AST *node = newASTNode("declaracao_lista");
+        AST *node = newASTNodeLine("declaracao_lista", g_last_line);
         addChild(node, $1);
         addChild(node, $2);
         $$ = node;
       }
     | declaracao
       {
-        AST *node = newASTNode("declaracao_lista");
+        AST *node = newASTNodeLine("declaracao_lista", g_last_line);
         addChild(node, $1);
         $$ = node;
       }
@@ -84,46 +78,50 @@ declaracao_lista:
 declaracao:
     var_declaracao
     {
-      AST *node = newASTNode("declaracao(var)");
+      AST *node = newASTNodeLine("declaracao(var)", g_last_line);
       addChild(node, $1);
       $$ = node;
     }
   | fun_declaracao
     {
-      AST *node = newASTNode("declaracao(fun)");
+      AST *node = newASTNodeLine("declaracao(fun)", g_last_line);
       addChild(node, $1);
       $$ = node;
     }
   ;
 
-/* var_declaracao -> tipo_especificador ID ; | tipo_especificador ID [ NUM ] ; */
+/* var_declaracao -> tipo_especificador ID ; 
+   ou           -> tipo_especificador ID [ NUM ] ; */
 var_declaracao:
     tipo_especificador ID SEMICOLON
     {
-      AST *node = newASTNode("var_declaracao");
+      AST *node = newASTNodeLine("var_declaracao", g_last_line);
       addChild(node, $1);
-      AST *idNode = newASTNode($2);  /* $2 = string do ID */
+
+      AST *idNode = newASTNodeLine($2, g_last_line);
       addChild(node, idNode);
-      addChild(node, newASTNode(";"));
+
+      addChild(node, newASTNodeLine(";", g_last_line));
       free($2); /* libera a string do yylval.str */
       $$ = node;
     }
   | tipo_especificador ID OPEN_SQUARE_BRACKETS NUM CLOSE_SQUARE_BRACKETS SEMICOLON
     {
-      AST *node = newASTNode("var_declaracao_array");
+      AST *node = newASTNodeLine("var_declaracao_array", g_last_line);
       addChild(node, $1);
 
-      AST *idNode = newASTNode($2);
+      AST *idNode = newASTNodeLine($2, g_last_line);
       addChild(node, idNode);
-      addChild(node, newASTNode("["));
+
+      addChild(node, newASTNodeLine("[", g_last_line));
 
       char buf[64];
       sprintf(buf, "NUM:%d", $4); 
-      AST *numNode = newASTNode(buf);
+      AST *numNode = newASTNodeLine(buf, g_last_line);
       addChild(node, numNode);
 
-      addChild(node, newASTNode("]"));
-      addChild(node, newASTNode(";"));
+      addChild(node, newASTNodeLine("]", g_last_line));
+      addChild(node, newASTNodeLine(";", g_last_line));
 
       free($2);
       $$ = node;
@@ -134,12 +132,12 @@ var_declaracao:
 tipo_especificador:
     INT
     {
-      AST *node = newASTNode("INT");
+      AST *node = newASTNodeLine("INT", g_last_line);
       $$ = node;
     }
   | VOID
     {
-      AST *node = newASTNode("VOID");
+      AST *node = newASTNodeLine("VOID", g_last_line);
       $$ = node;
     }
     ;
@@ -148,12 +146,12 @@ tipo_especificador:
 fun_declaracao:
     tipo_especificador ID OPEN_PARENTHESIS params CLOSE_PARENTHESIS composto_decl
     {
-      AST *node = newASTNode("fun_declaracao");
+      AST *node = newASTNodeLine("fun_declaracao", g_last_line);
       addChild(node, $1);
-      addChild(node, newASTNode($2));
-      addChild(node, newASTNode("("));
+      addChild(node, newASTNodeLine($2, g_last_line));
+      addChild(node, newASTNodeLine("(", g_last_line));
       addChild(node, $4);
-      addChild(node, newASTNode(")"));
+      addChild(node, newASTNodeLine(")", g_last_line));
       addChild(node, $6);
       free($2);
       $$ = node;
@@ -168,7 +166,7 @@ params:
     }
   | VOID
     {
-      AST *node = newASTNode("params_VOID");
+      AST *node = newASTNodeLine("params_VOID", g_last_line);
       $$ = node;
     }
     ;
@@ -177,15 +175,15 @@ params:
 param_lista:
     param_lista COMMA param
     {
-      AST *node = newASTNode("param_lista");
+      AST *node = newASTNodeLine("param_lista", g_last_line);
       addChild(node, $1);
-      addChild(node, newASTNode(","));
+      addChild(node, newASTNodeLine(",", g_last_line));
       addChild(node, $3);
       $$ = node;
     }
   | param
     {
-      AST *node = newASTNode("param_lista");
+      AST *node = newASTNodeLine("param_lista", g_last_line);
       addChild(node, $1);
       $$ = node;
     }
@@ -195,19 +193,19 @@ param_lista:
 param:
     tipo_especificador ID
     {
-      AST *node = newASTNode("param");
+      AST *node = newASTNodeLine("param", g_last_line);
       addChild(node, $1);
-      addChild(node, newASTNode($2));
+      addChild(node, newASTNodeLine($2, g_last_line));
       free($2);
       $$ = node;
     }
   | tipo_especificador ID OPEN_SQUARE_BRACKETS CLOSE_SQUARE_BRACKETS
     {
-      AST *node = newASTNode("param_array");
+      AST *node = newASTNodeLine("param_array", g_last_line);
       addChild(node, $1);
-      addChild(node, newASTNode($2));
-      addChild(node, newASTNode("["));
-      addChild(node, newASTNode("]"));
+      addChild(node, newASTNodeLine($2, g_last_line));
+      addChild(node, newASTNodeLine("[", g_last_line));
+      addChild(node, newASTNodeLine("]", g_last_line));
       free($2);
       $$ = node;
     }
@@ -217,11 +215,11 @@ param:
 composto_decl:
     OPEN_CURLY_BRACKETS local_declaracoes statement_lista CLOSE_CURLY_BRACKETS
     {
-      AST *node = newASTNode("composto_decl");
-      addChild(node, newASTNode("{"));
+      AST *node = newASTNodeLine("composto_decl", g_last_line);
+      addChild(node, newASTNodeLine("{", g_last_line));
       addChild(node, $2);
       addChild(node, $3);
-      addChild(node, newASTNode("}"));
+      addChild(node, newASTNodeLine("}", g_last_line));
       $$ = node;
     }
     ;
@@ -230,14 +228,14 @@ composto_decl:
 local_declaracoes:
     local_declaracoes var_declaracao
     {
-      AST *node = newASTNode("local_declaracoes");
+      AST *node = newASTNodeLine("local_declaracoes", g_last_line);
       addChild(node, $1);
       addChild(node, $2);
       $$ = node;
     }
   | /* vazio */
     {
-      AST *node = newASTNode("local_declaracoes_vazio");
+      AST *node = newASTNodeLine("local_declaracoes_vazio", g_last_line);
       $$ = node;
     }
     ;
@@ -246,14 +244,14 @@ local_declaracoes:
 statement_lista:
     statement_lista statement
     {
-      AST *node = newASTNode("statement_lista");
+      AST *node = newASTNodeLine("statement_lista", g_last_line);
       addChild(node, $1);
       addChild(node, $2);
       $$ = node;
     }
   | /* vazio */
     {
-      AST *node = newASTNode("statement_lista_vazio");
+      AST *node = newASTNodeLine("statement_lista_vazio", g_last_line);
       $$ = node;
     }
     ;
@@ -262,31 +260,31 @@ statement_lista:
 statement:
     expressao_decl
     {
-      AST *node = newASTNode("statement(expr)");
+      AST *node = newASTNodeLine("statement(expr)", g_last_line);
       addChild(node, $1);
       $$ = node;
     }
   | composto_decl
     {
-      AST *node = newASTNode("statement(composto)");
+      AST *node = newASTNodeLine("statement(composto)", g_last_line);
       addChild(node, $1);
       $$ = node;
     }
   | selecao_decl
     {
-      AST *node = newASTNode("statement(selecao)");
+      AST *node = newASTNodeLine("statement(selecao)", g_last_line);
       addChild(node, $1);
       $$ = node;
     }
   | iteracao_decl
     {
-      AST *node = newASTNode("statement(iteracao)");
+      AST *node = newASTNodeLine("statement(iteracao)", g_last_line);
       addChild(node, $1);
       $$ = node;
     }
   | retorno_decl
     {
-      AST *node = newASTNode("statement(retorno)");
+      AST *node = newASTNodeLine("statement(retorno)", g_last_line);
       addChild(node, $1);
       $$ = node;
     }
@@ -296,15 +294,15 @@ statement:
 expressao_decl:
     expressao SEMICOLON
     {
-      AST *node = newASTNode("expressao_decl");
+      AST *node = newASTNodeLine("expressao_decl", g_last_line);
       addChild(node, $1);
-      addChild(node, newASTNode(";"));
+      addChild(node, newASTNodeLine(";", g_last_line));
       $$ = node;
     }
   | SEMICOLON
     {
-      AST *node = newASTNode("expressao_decl_empty");
-      addChild(node, newASTNode(";"));
+      AST *node = newASTNodeLine("expressao_decl_empty", g_last_line);
+      addChild(node, newASTNodeLine(";", g_last_line));
       $$ = node;
     }
     ;
@@ -313,23 +311,23 @@ expressao_decl:
 selecao_decl:
     IF OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement
     {
-      AST *node = newASTNode("selecao_if");
-      addChild(node, newASTNode("IF"));
-      addChild(node, newASTNode("("));
+      AST *node = newASTNodeLine("selecao_if", g_last_line);
+      addChild(node, newASTNodeLine("IF", g_last_line));
+      addChild(node, newASTNodeLine("(", g_last_line));
       addChild(node, $3);
-      addChild(node, newASTNode(")"));
+      addChild(node, newASTNodeLine(")", g_last_line));
       addChild(node, $5);
       $$ = node;
     }
   | IF OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement ELSE statement
     {
-      AST *node = newASTNode("selecao_if_else");
-      addChild(node, newASTNode("IF"));
-      addChild(node, newASTNode("("));
+      AST *node = newASTNodeLine("selecao_if_else", g_last_line);
+      addChild(node, newASTNodeLine("IF", g_last_line));
+      addChild(node, newASTNodeLine("(", g_last_line));
       addChild(node, $3);
-      addChild(node, newASTNode(")"));
+      addChild(node, newASTNodeLine(")", g_last_line));
       addChild(node, $5);
-      addChild(node, newASTNode("ELSE"));
+      addChild(node, newASTNodeLine("ELSE", g_last_line));
       addChild(node, $7);
       $$ = node;
     }
@@ -339,11 +337,11 @@ selecao_decl:
 iteracao_decl:
     WHILE OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement
     {
-      AST *node = newASTNode("iteracao_while");
-      addChild(node, newASTNode("WHILE"));
-      addChild(node, newASTNode("("));
+      AST *node = newASTNodeLine("iteracao_while", g_last_line);
+      addChild(node, newASTNodeLine("WHILE", g_last_line));
+      addChild(node, newASTNodeLine("(", g_last_line));
       addChild(node, $3);
-      addChild(node, newASTNode(")"));
+      addChild(node, newASTNodeLine(")", g_last_line));
       addChild(node, $5);
       $$ = node;
     }
@@ -353,17 +351,17 @@ iteracao_decl:
 retorno_decl:
     RETURN SEMICOLON
     {
-      AST *node = newASTNode("retorno_decl");
-      addChild(node, newASTNode("RETURN"));
-      addChild(node, newASTNode(";"));
+      AST *node = newASTNodeLine("retorno_decl", g_last_line);
+      addChild(node, newASTNodeLine("RETURN", g_last_line));
+      addChild(node, newASTNodeLine(";", g_last_line));
       $$ = node;
     }
   | RETURN expressao SEMICOLON
     {
-      AST *node = newASTNode("retorno_decl");
-      addChild(node, newASTNode("RETURN"));
+      AST *node = newASTNodeLine("retorno_decl", g_last_line);
+      addChild(node, newASTNodeLine("RETURN", g_last_line));
       addChild(node, $2);
-      addChild(node, newASTNode(";"));
+      addChild(node, newASTNodeLine(";", g_last_line));
       $$ = node;
     }
     ;
@@ -372,9 +370,9 @@ retorno_decl:
 expressao:
     var EQUAL expressao
     {
-      AST *node = newASTNode("expressao_atribuicao");
+      AST *node = newASTNodeLine("expressao_atribuicao", g_last_line);
       addChild(node, $1);
-      addChild(node, newASTNode("="));
+      addChild(node, newASTNodeLine("=", g_last_line));
       addChild(node, $3);
       $$ = node;
     }
@@ -388,18 +386,18 @@ expressao:
 var:
     ID
     {
-      AST *node = newASTNode("var");
-      addChild(node, newASTNode($1));
+      AST *node = newASTNodeLine("var", g_last_line);
+      addChild(node, newASTNodeLine($1, g_last_line));
       free($1);
       $$ = node;
     }
   | ID OPEN_SQUARE_BRACKETS expressao CLOSE_SQUARE_BRACKETS
     {
-      AST *node = newASTNode("var_array");
-      addChild(node, newASTNode($1));
-      addChild(node, newASTNode("["));
+      AST *node = newASTNodeLine("var_array", g_last_line);
+      addChild(node, newASTNodeLine($1, g_last_line));
+      addChild(node, newASTNodeLine("[", g_last_line));
       addChild(node, $3);
-      addChild(node, newASTNode("]"));
+      addChild(node, newASTNodeLine("]", g_last_line));
       free($1);
       $$ = node;
     }
@@ -409,7 +407,7 @@ var:
 simples_expressao:
     soma_expressao relacional soma_expressao
     {
-      AST *node = newASTNode("simples_expressao");
+      AST *node = newASTNodeLine("simples_expressao", g_last_line);
       addChild(node, $1);
       addChild(node, $2);
       addChild(node, $3);
@@ -425,27 +423,27 @@ simples_expressao:
 relacional:
     MINOR_EQUAL
     {
-      $$ = newASTNode("<=");
+      $$ = newASTNodeLine("<=", g_last_line);
     }
   | MINOR
     {
-      $$ = newASTNode("<");
+      $$ = newASTNodeLine("<", g_last_line);
     }
   | GREATER
     {
-      $$ = newASTNode(">");
+      $$ = newASTNodeLine(">", g_last_line);
     }
   | GREATER_EQUAL
     {
-      $$ = newASTNode(">=");
+      $$ = newASTNodeLine(">=", g_last_line);
     }
   | EQUAL_EQUAL
     {
-      $$ = newASTNode("==");
+      $$ = newASTNodeLine("==", g_last_line);
     }
   | DIFFERENT
     {
-      $$ = newASTNode("!=");
+      $$ = newASTNodeLine("!=", g_last_line);
     }
     ;
 
@@ -453,7 +451,7 @@ relacional:
 soma_expressao:
     soma_expressao soma termo
     {
-      AST *node = newASTNode("soma_expressao");
+      AST *node = newASTNodeLine("soma_expressao", g_last_line);
       addChild(node, $1);
       addChild(node, $2);
       addChild(node, $3);
@@ -469,11 +467,11 @@ soma_expressao:
 soma:
     PLUS
     {
-      $$ = newASTNode("+");
+      $$ = newASTNodeLine("+", g_last_line);
     }
   | MINUS
     {
-      $$ = newASTNode("-");
+      $$ = newASTNodeLine("-", g_last_line);
     }
     ;
 
@@ -481,7 +479,7 @@ soma:
 termo:
     termo mult fator
     {
-      AST *node = newASTNode("termo");
+      AST *node = newASTNodeLine("termo", g_last_line);
       addChild(node, $1);
       addChild(node, $2);
       addChild(node, $3);
@@ -497,11 +495,11 @@ termo:
 mult:
     MULT
     {
-      $$ = newASTNode("*");
+      $$ = newASTNodeLine("*", g_last_line);
     }
   | DIV
     {
-      $$ = newASTNode("/");
+      $$ = newASTNodeLine("/", g_last_line);
     }
     ;
 
@@ -509,31 +507,30 @@ mult:
 fator:
     OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS
     {
-      AST *node = newASTNode("fator(paren)");
-      addChild(node, newASTNode("("));
+      AST *node = newASTNodeLine("fator(paren)", g_last_line);
+      addChild(node, newASTNodeLine("(", g_last_line));
       addChild(node, $2);
-      addChild(node, newASTNode(")"));
+      addChild(node, newASTNodeLine(")", g_last_line));
       $$ = node;
     }
   | var
     {
-      AST *node = newASTNode("fator(var)");
+      AST *node = newASTNodeLine("fator(var)", g_last_line);
       addChild(node, $1);
       $$ = node;
     }
   | ativacao
     {
-      AST *node = newASTNode("fator(ativ)");
+      AST *node = newASTNodeLine("fator(ativ)", g_last_line);
       addChild(node, $1);
       $$ = node;
     }
   | NUM
     {
-      /* Ex: "NUM:123" */
       char buf[64];
       sprintf(buf, "NUM:%d", $1);
-      AST *node = newASTNode("fator(NUM)");
-      addChild(node, newASTNode(buf));
+      AST *node = newASTNodeLine("fator(NUM)", g_last_line);
+      addChild(node, newASTNodeLine(buf, g_last_line));
       $$ = node;
     }
     ;
@@ -542,11 +539,11 @@ fator:
 ativacao:
     ID OPEN_PARENTHESIS args CLOSE_PARENTHESIS
     {
-      AST *node = newASTNode("ativacao");
-      addChild(node, newASTNode($1));
-      addChild(node, newASTNode("("));
+      AST *node = newASTNodeLine("ativacao", g_last_line);
+      addChild(node, newASTNodeLine($1, g_last_line));
+      addChild(node, newASTNodeLine("(", g_last_line));
       addChild(node, $3);
-      addChild(node, newASTNode(")"));
+      addChild(node, newASTNodeLine(")", g_last_line));
       free($1);
       $$ = node;
     }
@@ -558,9 +555,9 @@ args:
     {
       $$ = $1;
     }
-  | /* vazio */
+  |
     {
-      AST *node = newASTNode("args_vazio");
+      AST *node = newASTNodeLine("args_vazio", g_last_line);
       $$ = node;
     }
     ;
@@ -569,15 +566,15 @@ args:
 arg_lista:
     arg_lista COMMA expressao
     {
-      AST *node = newASTNode("arg_lista");
+      AST *node = newASTNodeLine("arg_lista", g_last_line);
       addChild(node, $1);
-      addChild(node, newASTNode(","));
+      addChild(node, newASTNodeLine(",", g_last_line));
       addChild(node, $3);
       $$ = node;
     }
   | expressao
     {
-      AST *node = newASTNode("arg_lista");
+      AST *node = newASTNodeLine("arg_lista", g_last_line);
       addChild(node, $1);
       $$ = node;
     }
@@ -587,8 +584,6 @@ arg_lista:
 
 /* Rotina de erro sintático */
 void yyerror(const char *s) {
-    /* Você pode imprimir algo como: 
-       ERRO SINTATICO: "<token>" INVALIDO [linha X], COLUNA Y */
     fprintf(stderr, 
       "ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
       g_last_lexeme, g_last_line, g_last_col
