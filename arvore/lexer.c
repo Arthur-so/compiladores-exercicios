@@ -380,37 +380,6 @@ int AdicionaAoTokenEstado[32] = {
   1,1,1,1,1,1,1,1,1,1,1,1
 };
 
-// int T[32][20] = {
-//    {1,2,ST_PLUS,ST_MINUS,ST_MULT,ST_SEMICOLON,ST_COMMA,ST_OPAREN,ST_CPAREN,ST_OBRACK,ST_CBRACK,ST_OCURLY,ST_CCURLY,3,4,5,6,7,0,-1},
-//    {1,-1,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,ST_ID,-1},
-//    {-1,2,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,ST_NUM,-1},
-//    {ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER,ST_GREATER_EQ,ST_GREATER,ST_GREATER,ST_GREATER,-1},
-//    {ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR,ST_MINOR_EQ,ST_MINOR,ST_MINOR,ST_MINOR,-1},
-//    {ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL,ST_EQUAL_EQ,ST_EQUAL,ST_EQUAL,ST_EQUAL,-1},
-//    {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,ST_DIFF,-1,-1,-1,-1},
-//    {ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,8,ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,ST_SLASH,-1},
-//    {8,8,8,8,9,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8},
-//    {8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,ST_COMMENT,8,8},
-//    /* states ST_ID..ST_SLASH => 0 */
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-// };
 
 /* ------------------------------------------------------------------------- *
  *  Tabela de Transição T[32][20]
@@ -422,7 +391,7 @@ int T[32][20] = {
     /*                      Colunas:
        0   1      2        3        4        5         6         7         8         9
        L   D      +        -        *        ;         ,         (         )         [
-       
+
       10  11    12       13       14       15        16        17        18        19
       ]   {      }        >        <        =         !         /         B         outro
     */
