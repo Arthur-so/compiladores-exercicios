@@ -2,7 +2,7 @@
 
 CC     = gcc
 BISON  = bison
-CFLAGS = -Wall -Wextra -g  # Ajuste as flags de compilação que quiser
+CFLAGS = -Wall -Wextra -g
 
 all: compilador
 
@@ -27,7 +27,6 @@ ast.o: ast.c ast.h
 main.o: main.c lexeme.h ast.h symtab.h semantic.h
 	$(CC) $(CFLAGS) -c main.c
 
-# Novos alvos para a Tabela de Símbolos e Análise Semântica:
 symtab.o: symtab.c symtab.h
 	$(CC) $(CFLAGS) -c symtab.c
 

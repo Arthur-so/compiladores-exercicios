@@ -49,7 +49,7 @@ extern YYSTYPE yylval;
 #define L_SLASH        31
 
 int yylex(void) {
-    Token *t = get_token(lexer);
+    Token *t = getToken(lexer);
 
     /* Fim de arquivo => return 0 p/ Bison encerrar */
     if (t->done) {

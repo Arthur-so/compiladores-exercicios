@@ -23,21 +23,40 @@ void addChild(AST *parent, AST *child) {
     parent->children[parent->numChildren - 1] = child;
 }
 
-/* Função recursiva que imprime o nome e a linha */
-static void printASTRec(AST *node) {
+
+static void printIndent(int level) {
+    /* Exemplo: 4 espaços por nível */
+    for (int i = 0; i < level; i++) {
+        printf("    "); /* 4 espaços */
+    }
+}
+
+static void printASTRec(AST *node, int level) {
     if (!node) return;
-    /* Ex.: imprime "var_declaracao(line=5) (...)" */
-    printf("%s(line=%d) (", node->name, node->line);
+
+    printIndent(level);
+    printf("%s(\n", node->name);
+
+    /* Imprime os filhos, cada um em uma nova linha, indentando +1 */
     for (int i = 0; i < node->numChildren; i++) {
-        printASTRec(node->children[i]);
+        /* Chama recursivo com level+1 */
+        printASTRec(node->children[i], level + 1);
+
         if (i < node->numChildren - 1) {
-            printf(", ");
+            /* Se não é o último filho, imprime vírgula e \n */
+            printf(",\n");
+        } else {
+            printf("\n");
         }
     }
+
+    /* Fecha o parêntese no mesmo nível do nó */
+    printIndent(level);
     printf(")");
 }
 
-void printAST(AST *node) {
-    printASTRec(node);
+/* Função pública para imprimir a AST a partir da raiz */
+void printAST(AST *root) {
+    printASTRec(root, 0);
     printf("\n");
 }

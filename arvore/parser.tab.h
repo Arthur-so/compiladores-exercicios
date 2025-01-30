@@ -89,7 +89,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 24 "parser.y"
+#line 23 "parser.y"
 
     AST *ast;   /* Para nós da AST */
     char *str;  /* Para lexemas de ID */

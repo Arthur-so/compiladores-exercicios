@@ -4,8 +4,8 @@
 
 #include "lexeme.h"
 #include "ast.h"
-#include "symtab.h"    /* NOVO */
-#include "semantic.h"  /* buildSymtab, checkSemantics */
+#include "symtab.h"
+#include "semantic.h"
 
 extern AST *g_root;    
 extern int yyparse();
@@ -15,7 +15,7 @@ Lexer *lexer = NULL;
 /* Função para fazer somente a varredura léxica e imprimir tokens */
 void doLexicalAnalysisOnly(Lexer *lexer) {
     while (1) {
-        Token *t = get_token(lexer);
+        Token *t = getToken(lexer);
         
         if (t->done) {
             // Fim de arquivo
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i],"-s") || !strcmp(argv[i],"-S")) print_symtab = 1;
     }
 
-    lexer = initialize_lexer(argv[1],256);
+    lexer = initializeLexer(argv[1],256);
     if (!lexer) {
         fprintf(stderr,"Falha ao abrir arquivo: %s\n", argv[1]);
         return 1;
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 
     if (only_lex) {
         doLexicalAnalysisOnly(lexer);
-        destroy_lexer(lexer);
+        destroyLexer(lexer);
         return 0;
     }
 
@@ -95,6 +95,6 @@ int main(int argc, char **argv) {
         printf("Houve erro(s) sintático(s).\n");
     }
 
-    destroy_lexer(lexer);
+    destroyLexer(lexer);
     return 0;
 }

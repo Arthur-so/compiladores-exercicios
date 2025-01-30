@@ -1,7 +1,5 @@
-#ifndef LEXEME_H
-#define LEXEME_H
-
 #include <stdio.h>
+
 /* ---------------------------
    Códigos internos do lexer
    --------------------------- */
@@ -46,9 +44,9 @@ typedef struct {
 
 /* Funções de manipulação do buffer */
 Buffer* allocate_buffer(int size);
-void deallocate_buffer(Buffer* buffer);
-char get_next_char(FILE *fptr, Buffer* buffer);
-void unget_char(Buffer* buffer);
+void deallocateBuffer(Buffer* buffer);
+char getNextChar(FILE *fptr, Buffer* buffer);
+void ungetChar(Buffer* buffer);
 
 /* Estrutura de Token (sem enum duplicada) */
 typedef struct {
@@ -70,19 +68,17 @@ typedef struct {
 } Lexer;
 
 /* Funções do lexer */
-Lexer* initialize_lexer(const char *filename, int buffer_size);
-void destroy_lexer(Lexer *lexer);
-Token* get_token(Lexer *lexer);
+Lexer* initializeLexer(const char *filename, int buffer_size);
+void destroyLexer(Lexer *lexer);
+Token* getToken(Lexer *lexer);
 
 /* Auxiliares */
-int get_tipo(char ch);
-int classifica_lexema(char* lexeme, int estado);
+int getCharType(char ch);
+int classifyLexeme(char* lexeme, int estado);
 
 /* Tabelas do autômato */
-extern int Aceita[32];
-extern int AdicionaAoToken[20];
-extern int AdicionaAoTokenEstado[32];
+extern int Accept[32];
+extern int AddSymbolToLexeme[20];
+extern int AddSymbolToLexemeBasedOnState[32];
 extern int T[32][20];
-extern int Avance[32][20];
-
-#endif
+extern int Advance[32][20];

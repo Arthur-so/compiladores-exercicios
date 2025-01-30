@@ -8,7 +8,7 @@
 /* ---------------------------------------------------------
    1) Funções do Buffer
    --------------------------------------------------------- */
-static void fill_buffer(FILE *fptr, Buffer *buffer) {
+static void fillBuffer(FILE *fptr, Buffer *buffer) {
     memset(buffer->data, 0, buffer->size);
     if (fgets(buffer->data, buffer->size, fptr) != NULL) {
         buffer->next_char_id = 0;
@@ -35,16 +35,16 @@ Buffer* allocate_buffer(int size) {
     return buf;
 }
 
-void deallocate_buffer(Buffer* buffer) {
+void deallocateBuffer(Buffer* buffer) {
     if (buffer) {
         free(buffer->data);
         free(buffer);
     }
 }
 
-char get_next_char(FILE *fptr, Buffer* buffer) {
+char getNextChar(FILE *fptr, Buffer* buffer) {
     if (buffer->next_char_id >= buffer->size || buffer->data[buffer->next_char_id] == '\0') {
-        fill_buffer(fptr, buffer);
+        fillBuffer(fptr, buffer);
         if (buffer->data[0] == '\0') {
             return EOF;
         }
@@ -59,7 +59,7 @@ char get_next_char(FILE *fptr, Buffer* buffer) {
     return buffer->data[buffer->next_char_id];
 }
 
-void unget_char(Buffer* buffer) {
+void ungetChar(Buffer* buffer) {
     if (buffer->next_char_id > 0) {
         buffer->next_char_id--;
     }
@@ -68,7 +68,7 @@ void unget_char(Buffer* buffer) {
 /* ---------------------------------------------------------
    2) Inicialização e destruição do Lexer
    --------------------------------------------------------- */
-Lexer* initialize_lexer(const char *filename, int buffer_size) {
+Lexer* initializeLexer(const char *filename, int buffer_size) {
     FILE *f = fopen(filename, "r");
     if (!f) {
         perror("Erro ao abrir arquivo");
@@ -89,18 +89,18 @@ Lexer* initialize_lexer(const char *filename, int buffer_size) {
     return lexer;
 }
 
-void destroy_lexer(Lexer *lexer) {
+void destroyLexer(Lexer *lexer) {
     if (!lexer) return;
-    deallocate_buffer(lexer->buffer);
+    deallocateBuffer(lexer->buffer);
     free(lexer->token);
     fclose(lexer->file);
     free(lexer);
 }
 
 /* ---------------------------------------------------------
-   3) get_tipo() -> classifica caractere em índice do T[][] 
+   3) getCharType() -> classifica caractere em índice do T[][] 
    --------------------------------------------------------- */
-int get_tipo(char ch) {
+int getCharType(char ch) {
     if (isalpha(ch)) {
         return 0; // letra
     }
@@ -136,10 +136,10 @@ int get_tipo(char ch) {
 }
 
 /* ---------------------------------------------------------
-   4) classifica_lexema() -> dado estado final e lexema,
+   4) classifyLexeme() -> dado estado final e lexema,
       retorna nosso código interno (L_...)
    --------------------------------------------------------- */
-int classifica_lexema(char* lexeme, int estado) {
+int classifyLexeme(char* lexeme, int estado) {
     int code = estado; // de início, use o "estado" numérico
 
     /* Ex: estado=10 => ID, 11 => NUM, etc. */
@@ -156,9 +156,9 @@ int classifica_lexema(char* lexeme, int estado) {
 }
 
 /* ---------------------------------------------------------
-   5) get_token() -> loop para pegar próximo token
+   5) getToken() -> loop para pegar próximo token
    --------------------------------------------------------- */
-Token* get_token(Lexer *lexer) {
+Token* getToken(Lexer *lexer) {
     char c = 0;
     int char_lexeme_id = 0;
     char aux_lexeme[64];
@@ -194,11 +194,11 @@ Token* get_token(Lexer *lexer) {
         }
 
         /* ---------- VERIFICA SE ESTADO É DE ACEITAÇÃO ---------- */
-        if (Aceita[lexer->current_state]) {
+        if (Accept[lexer->current_state]) {
             aux_lexeme[char_lexeme_id] = '\0';
 
-            /* classifica_lexema decide se é ID, NUM, etc. */
-            lexer->token->token_code = classifica_lexema(aux_lexeme, lexer->current_state);
+            /* classifyLexeme decide se é ID, NUM, etc. */
+            lexer->token->token_code = classifyLexeme(aux_lexeme, lexer->current_state);
             lexer->token->line   = lexer->buffer->next_char_line;
             lexer->token->column = lexer->buffer->next_char_id;
             strncpy(lexer->token->lexeme, aux_lexeme, sizeof(lexer->token->lexeme));
@@ -208,23 +208,23 @@ Token* get_token(Lexer *lexer) {
         }
 
         /* Lê próximo caractere */
-        c = get_next_char(lexer->file, lexer->buffer);
+        c = getNextChar(lexer->file, lexer->buffer);
         if (c == EOF) {
             lexer->token->done = 1;
             return lexer->token;
         }
 
         /* Consulta tabela de transição */
-        char_code = get_tipo(c);
+        char_code = getCharType(c);
         novo_estado = T[lexer->current_state][char_code];
-        avance = Avance[lexer->current_state][char_code];
+        avance = Advance[lexer->current_state][char_code];
 
         /* Se for pra avançar, adiciona char no aux_lexeme se apropriado */
         if (avance) {
-            /* Verifica se precisa adicionar ao token (Ex: o que está dentro do comentário é ignorado) */
-            if (AdicionaAoToken[char_code] &&
-                (AdicionaAoTokenEstado[novo_estado] || 
-                 AdicionaAoTokenEstado[lexer->current_state])) 
+            /* Verifica se precisa adicionar ao lexema (Ex: o que está dentro do comentário é ignorado) */
+            if (AddSymbolToLexeme[char_code] &&
+                (AddSymbolToLexemeBasedOnState[novo_estado] || 
+                 AddSymbolToLexemeBasedOnState[lexer->current_state])) 
             {
                 aux_lexeme[char_lexeme_id++] = c;
             }
@@ -241,8 +241,8 @@ Token* get_token(Lexer *lexer) {
 /* ---------------------------------------------------------
    6) Tabelas do autômato
    --------------------------------------------------------- */
-/* Tabela de aceitação, é um estado final */
-int Aceita[32] = {
+/* Tabela de Acceptção, é um estado final */
+int Accept[32] = {
   0,0,0,0,0,0,0,0,0,0,
   1,1,
   1,1,1,1,1,1,1,
@@ -251,12 +251,12 @@ int Aceita[32] = {
 };
 
 /* Baseado nos simbolos da linguagem decide se inclui no lexema () */
-int AdicionaAoToken[20] = {
+int AddSymbolToLexeme[20] = {
   1,1,1,1,1,1,1,1,1,1,
   1,1,1,1,1,1,1,1,0,0 //Não adiciona Branco e outro ao lexema
 };
 
-int AdicionaAoTokenEstado[32] = {
+int AddSymbolToLexemeBasedOnState[32] = {
   1,1,1,1,1,1,1,1,
   0,0, // Inora os estados que representam o meio do comentário
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
@@ -418,7 +418,7 @@ int T[32][20] = {
 
 };
 
-int Avance[32][20] = {
+int Advance[32][20] = {
    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0}, // Estado 0
    {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, // Estado 1
    {0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, // Estado 2

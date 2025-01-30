@@ -67,7 +67,7 @@
 
 
 /* First part of user prologue.  */
-#line 2 "parser.y"
+#line 1 "parser.y"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -564,13 +564,13 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    51,    51,    62,    69,    79,    85,    96,   108,   133,
-     138,   147,   163,   167,   176,   184,   194,   202,   216,   229,
-     237,   245,   253,   261,   267,   273,   279,   285,   295,   302,
-     312,   322,   338,   352,   359,   371,   379,   387,   394,   408,
-     416,   424,   428,   432,   436,   440,   444,   452,   460,   468,
-     472,   480,   488,   496,   500,   508,   516,   522,   528,   540,
-     554,   559,   567,   575
+       0,    50,    50,    61,    68,    78,    84,    95,   107,   132,
+     137,   146,   162,   166,   175,   183,   193,   201,   215,   228,
+     236,   244,   252,   260,   266,   272,   278,   284,   294,   301,
+     311,   321,   337,   351,   358,   370,   378,   386,   393,   407,
+     415,   423,   427,   431,   435,   439,   443,   451,   459,   467,
+     471,   479,   487,   495,   499,   507,   515,   521,   527,   539,
+     553,   558,   566,   574
 };
 #endif
 
@@ -1201,7 +1201,7 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* programa: declaracao_lista  */
-#line 52 "parser.y"
+#line 51 "parser.y"
     {
         /* A raiz da AST é a lista de declarações */
         AST *node = newASTNodeLine("programa", g_last_line);
@@ -1212,7 +1212,7 @@ yyreduce:
     break;
 
   case 3: /* declaracao_lista: declaracao_lista declaracao  */
-#line 63 "parser.y"
+#line 62 "parser.y"
       {
         AST *node = newASTNodeLine("declaracao_lista", g_last_line);
         addChild(node, (yyvsp[-1].ast));
@@ -1223,7 +1223,7 @@ yyreduce:
     break;
 
   case 4: /* declaracao_lista: declaracao  */
-#line 70 "parser.y"
+#line 69 "parser.y"
       {
         AST *node = newASTNodeLine("declaracao_lista", g_last_line);
         addChild(node, (yyvsp[0].ast));
@@ -1233,7 +1233,7 @@ yyreduce:
     break;
 
   case 5: /* declaracao: var_declaracao  */
-#line 80 "parser.y"
+#line 79 "parser.y"
     {
       AST *node = newASTNodeLine("declaracao(var)", g_last_line);
       addChild(node, (yyvsp[0].ast));
@@ -1243,7 +1243,7 @@ yyreduce:
     break;
 
   case 6: /* declaracao: fun_declaracao  */
-#line 86 "parser.y"
+#line 85 "parser.y"
     {
       AST *node = newASTNodeLine("declaracao(fun)", g_last_line);
       addChild(node, (yyvsp[0].ast));
@@ -1253,7 +1253,7 @@ yyreduce:
     break;
 
   case 7: /* var_declaracao: tipo_especificador ID SEMICOLON  */
-#line 97 "parser.y"
+#line 96 "parser.y"
     {
       AST *node = newASTNodeLine("var_declaracao", g_last_line);
       addChild(node, (yyvsp[-2].ast));
@@ -1269,7 +1269,7 @@ yyreduce:
     break;
 
   case 8: /* var_declaracao: tipo_especificador ID OPEN_SQUARE_BRACKETS NUM CLOSE_SQUARE_BRACKETS SEMICOLON  */
-#line 109 "parser.y"
+#line 108 "parser.y"
     {
       AST *node = newASTNodeLine("var_declaracao_array", g_last_line);
       addChild(node, (yyvsp[-5].ast));
@@ -1294,7 +1294,7 @@ yyreduce:
     break;
 
   case 9: /* tipo_especificador: INT  */
-#line 134 "parser.y"
+#line 133 "parser.y"
     {
       AST *node = newASTNodeLine("INT", g_last_line);
       (yyval.ast) = node;
@@ -1303,7 +1303,7 @@ yyreduce:
     break;
 
   case 10: /* tipo_especificador: VOID  */
-#line 139 "parser.y"
+#line 138 "parser.y"
     {
       AST *node = newASTNodeLine("VOID", g_last_line);
       (yyval.ast) = node;
@@ -1312,7 +1312,7 @@ yyreduce:
     break;
 
   case 11: /* fun_declaracao: tipo_especificador ID OPEN_PARENTHESIS params CLOSE_PARENTHESIS composto_decl  */
-#line 148 "parser.y"
+#line 147 "parser.y"
     {
       AST *node = newASTNodeLine("fun_declaracao", g_last_line);
       addChild(node, (yyvsp[-5].ast));
@@ -1328,7 +1328,7 @@ yyreduce:
     break;
 
   case 12: /* params: param_lista  */
-#line 164 "parser.y"
+#line 163 "parser.y"
     {
       (yyval.ast) = (yyvsp[0].ast);
     }
@@ -1336,7 +1336,7 @@ yyreduce:
     break;
 
   case 13: /* params: VOID  */
-#line 168 "parser.y"
+#line 167 "parser.y"
     {
       AST *node = newASTNodeLine("params_VOID", g_last_line);
       (yyval.ast) = node;
@@ -1345,7 +1345,7 @@ yyreduce:
     break;
 
   case 14: /* param_lista: param_lista COMMA param  */
-#line 177 "parser.y"
+#line 176 "parser.y"
     {
       AST *node = newASTNodeLine("param_lista", g_last_line);
       addChild(node, (yyvsp[-2].ast));
@@ -1357,7 +1357,7 @@ yyreduce:
     break;
 
   case 15: /* param_lista: param  */
-#line 185 "parser.y"
+#line 184 "parser.y"
     {
       AST *node = newASTNodeLine("param_lista", g_last_line);
       addChild(node, (yyvsp[0].ast));
@@ -1367,7 +1367,7 @@ yyreduce:
     break;
 
   case 16: /* param: tipo_especificador ID  */
-#line 195 "parser.y"
+#line 194 "parser.y"
     {
       AST *node = newASTNodeLine("param", g_last_line);
       addChild(node, (yyvsp[-1].ast));
@@ -1379,7 +1379,7 @@ yyreduce:
     break;
 
   case 17: /* param: tipo_especificador ID OPEN_SQUARE_BRACKETS CLOSE_SQUARE_BRACKETS  */
-#line 203 "parser.y"
+#line 202 "parser.y"
     {
       AST *node = newASTNodeLine("param_array", g_last_line);
       addChild(node, (yyvsp[-3].ast));
@@ -1393,7 +1393,7 @@ yyreduce:
     break;
 
   case 18: /* composto_decl: OPEN_CURLY_BRACKETS local_declaracoes statement_lista CLOSE_CURLY_BRACKETS  */
-#line 217 "parser.y"
+#line 216 "parser.y"
     {
       AST *node = newASTNodeLine("composto_decl", g_last_line);
       addChild(node, newASTNodeLine("{", g_last_line));
@@ -1406,7 +1406,7 @@ yyreduce:
     break;
 
   case 19: /* local_declaracoes: local_declaracoes var_declaracao  */
-#line 230 "parser.y"
+#line 229 "parser.y"
     {
       AST *node = newASTNodeLine("local_declaracoes", g_last_line);
       addChild(node, (yyvsp[-1].ast));
@@ -1417,7 +1417,7 @@ yyreduce:
     break;
 
   case 20: /* local_declaracoes: %empty  */
-#line 237 "parser.y"
+#line 236 "parser.y"
     {
       AST *node = newASTNodeLine("local_declaracoes_vazio", g_last_line);
       (yyval.ast) = node;
@@ -1426,7 +1426,7 @@ yyreduce:
     break;
 
   case 21: /* statement_lista: statement_lista statement  */
-#line 246 "parser.y"
+#line 245 "parser.y"
     {
       AST *node = newASTNodeLine("statement_lista", g_last_line);
       addChild(node, (yyvsp[-1].ast));
@@ -1437,7 +1437,7 @@ yyreduce:
     break;
 
   case 22: /* statement_lista: %empty  */
-#line 253 "parser.y"
+#line 252 "parser.y"
     {
       AST *node = newASTNodeLine("statement_lista_vazio", g_last_line);
       (yyval.ast) = node;
@@ -1446,7 +1446,7 @@ yyreduce:
     break;
 
   case 23: /* statement: expressao_decl  */
-#line 262 "parser.y"
+#line 261 "parser.y"
     {
       AST *node = newASTNodeLine("statement(expr)", g_last_line);
       addChild(node, (yyvsp[0].ast));
@@ -1456,7 +1456,7 @@ yyreduce:
     break;
 
   case 24: /* statement: composto_decl  */
-#line 268 "parser.y"
+#line 267 "parser.y"
     {
       AST *node = newASTNodeLine("statement(composto)", g_last_line);
       addChild(node, (yyvsp[0].ast));
@@ -1466,7 +1466,7 @@ yyreduce:
     break;
 
   case 25: /* statement: selecao_decl  */
-#line 274 "parser.y"
+#line 273 "parser.y"
     {
       AST *node = newASTNodeLine("statement(selecao)", g_last_line);
       addChild(node, (yyvsp[0].ast));
@@ -1476,7 +1476,7 @@ yyreduce:
     break;
 
   case 26: /* statement: iteracao_decl  */
-#line 280 "parser.y"
+#line 279 "parser.y"
     {
       AST *node = newASTNodeLine("statement(iteracao)", g_last_line);
       addChild(node, (yyvsp[0].ast));
@@ -1486,7 +1486,7 @@ yyreduce:
     break;
 
   case 27: /* statement: retorno_decl  */
-#line 286 "parser.y"
+#line 285 "parser.y"
     {
       AST *node = newASTNodeLine("statement(retorno)", g_last_line);
       addChild(node, (yyvsp[0].ast));
@@ -1496,7 +1496,7 @@ yyreduce:
     break;
 
   case 28: /* expressao_decl: expressao SEMICOLON  */
-#line 296 "parser.y"
+#line 295 "parser.y"
     {
       AST *node = newASTNodeLine("expressao_decl", g_last_line);
       addChild(node, (yyvsp[-1].ast));
@@ -1507,7 +1507,7 @@ yyreduce:
     break;
 
   case 29: /* expressao_decl: SEMICOLON  */
-#line 303 "parser.y"
+#line 302 "parser.y"
     {
       AST *node = newASTNodeLine("expressao_decl_empty", g_last_line);
       addChild(node, newASTNodeLine(";", g_last_line));
@@ -1517,7 +1517,7 @@ yyreduce:
     break;
 
   case 30: /* selecao_decl: IF OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement  */
-#line 313 "parser.y"
+#line 312 "parser.y"
     {
       AST *node = newASTNodeLine("selecao_if", g_last_line);
       addChild(node, newASTNodeLine("IF", g_last_line));
@@ -1531,7 +1531,7 @@ yyreduce:
     break;
 
   case 31: /* selecao_decl: IF OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement ELSE statement  */
-#line 323 "parser.y"
+#line 322 "parser.y"
     {
       AST *node = newASTNodeLine("selecao_if_else", g_last_line);
       addChild(node, newASTNodeLine("IF", g_last_line));
@@ -1547,7 +1547,7 @@ yyreduce:
     break;
 
   case 32: /* iteracao_decl: WHILE OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement  */
-#line 339 "parser.y"
+#line 338 "parser.y"
     {
       AST *node = newASTNodeLine("iteracao_while", g_last_line);
       addChild(node, newASTNodeLine("WHILE", g_last_line));
@@ -1561,7 +1561,7 @@ yyreduce:
     break;
 
   case 33: /* retorno_decl: RETURN SEMICOLON  */
-#line 353 "parser.y"
+#line 352 "parser.y"
     {
       AST *node = newASTNodeLine("retorno_decl", g_last_line);
       addChild(node, newASTNodeLine("RETURN", g_last_line));
@@ -1572,7 +1572,7 @@ yyreduce:
     break;
 
   case 34: /* retorno_decl: RETURN expressao SEMICOLON  */
-#line 360 "parser.y"
+#line 359 "parser.y"
     {
       AST *node = newASTNodeLine("retorno_decl", g_last_line);
       addChild(node, newASTNodeLine("RETURN", g_last_line));
@@ -1584,7 +1584,7 @@ yyreduce:
     break;
 
   case 35: /* expressao: var EQUAL expressao  */
-#line 372 "parser.y"
+#line 371 "parser.y"
     {
       AST *node = newASTNodeLine("expressao_atribuicao", g_last_line);
       addChild(node, (yyvsp[-2].ast));
@@ -1596,7 +1596,7 @@ yyreduce:
     break;
 
   case 36: /* expressao: simples_expressao  */
-#line 380 "parser.y"
+#line 379 "parser.y"
     {
       (yyval.ast) = (yyvsp[0].ast);
     }
@@ -1604,7 +1604,7 @@ yyreduce:
     break;
 
   case 37: /* var: ID  */
-#line 388 "parser.y"
+#line 387 "parser.y"
     {
       AST *node = newASTNodeLine("var", g_last_line);
       addChild(node, newASTNodeLine((yyvsp[0].str), g_last_line));
@@ -1615,7 +1615,7 @@ yyreduce:
     break;
 
   case 38: /* var: ID OPEN_SQUARE_BRACKETS expressao CLOSE_SQUARE_BRACKETS  */
-#line 395 "parser.y"
+#line 394 "parser.y"
     {
       AST *node = newASTNodeLine("var_array", g_last_line);
       addChild(node, newASTNodeLine((yyvsp[-3].str), g_last_line));
@@ -1629,7 +1629,7 @@ yyreduce:
     break;
 
   case 39: /* simples_expressao: soma_expressao relacional soma_expressao  */
-#line 409 "parser.y"
+#line 408 "parser.y"
     {
       AST *node = newASTNodeLine("simples_expressao", g_last_line);
       addChild(node, (yyvsp[-2].ast));
@@ -1641,7 +1641,7 @@ yyreduce:
     break;
 
   case 40: /* simples_expressao: soma_expressao  */
-#line 417 "parser.y"
+#line 416 "parser.y"
     {
       (yyval.ast) = (yyvsp[0].ast);
     }
@@ -1649,7 +1649,7 @@ yyreduce:
     break;
 
   case 41: /* relacional: MINOR_EQUAL  */
-#line 425 "parser.y"
+#line 424 "parser.y"
     {
       (yyval.ast) = newASTNodeLine("<=", g_last_line);
     }
@@ -1657,7 +1657,7 @@ yyreduce:
     break;
 
   case 42: /* relacional: MINOR  */
-#line 429 "parser.y"
+#line 428 "parser.y"
     {
       (yyval.ast) = newASTNodeLine("<", g_last_line);
     }
@@ -1665,7 +1665,7 @@ yyreduce:
     break;
 
   case 43: /* relacional: GREATER  */
-#line 433 "parser.y"
+#line 432 "parser.y"
     {
       (yyval.ast) = newASTNodeLine(">", g_last_line);
     }
@@ -1673,7 +1673,7 @@ yyreduce:
     break;
 
   case 44: /* relacional: GREATER_EQUAL  */
-#line 437 "parser.y"
+#line 436 "parser.y"
     {
       (yyval.ast) = newASTNodeLine(">=", g_last_line);
     }
@@ -1681,7 +1681,7 @@ yyreduce:
     break;
 
   case 45: /* relacional: EQUAL_EQUAL  */
-#line 441 "parser.y"
+#line 440 "parser.y"
     {
       (yyval.ast) = newASTNodeLine("==", g_last_line);
     }
@@ -1689,7 +1689,7 @@ yyreduce:
     break;
 
   case 46: /* relacional: DIFFERENT  */
-#line 445 "parser.y"
+#line 444 "parser.y"
     {
       (yyval.ast) = newASTNodeLine("!=", g_last_line);
     }
@@ -1697,7 +1697,7 @@ yyreduce:
     break;
 
   case 47: /* soma_expressao: soma_expressao soma termo  */
-#line 453 "parser.y"
+#line 452 "parser.y"
     {
       AST *node = newASTNodeLine("soma_expressao", g_last_line);
       addChild(node, (yyvsp[-2].ast));
@@ -1709,7 +1709,7 @@ yyreduce:
     break;
 
   case 48: /* soma_expressao: termo  */
-#line 461 "parser.y"
+#line 460 "parser.y"
     {
       (yyval.ast) = (yyvsp[0].ast);
     }
@@ -1717,7 +1717,7 @@ yyreduce:
     break;
 
   case 49: /* soma: PLUS  */
-#line 469 "parser.y"
+#line 468 "parser.y"
     {
       (yyval.ast) = newASTNodeLine("+", g_last_line);
     }
@@ -1725,7 +1725,7 @@ yyreduce:
     break;
 
   case 50: /* soma: MINUS  */
-#line 473 "parser.y"
+#line 472 "parser.y"
     {
       (yyval.ast) = newASTNodeLine("-", g_last_line);
     }
@@ -1733,7 +1733,7 @@ yyreduce:
     break;
 
   case 51: /* termo: termo mult fator  */
-#line 481 "parser.y"
+#line 480 "parser.y"
     {
       AST *node = newASTNodeLine("termo", g_last_line);
       addChild(node, (yyvsp[-2].ast));
@@ -1745,7 +1745,7 @@ yyreduce:
     break;
 
   case 52: /* termo: fator  */
-#line 489 "parser.y"
+#line 488 "parser.y"
     {
       (yyval.ast) = (yyvsp[0].ast);
     }
@@ -1753,7 +1753,7 @@ yyreduce:
     break;
 
   case 53: /* mult: MULT  */
-#line 497 "parser.y"
+#line 496 "parser.y"
     {
       (yyval.ast) = newASTNodeLine("*", g_last_line);
     }
@@ -1761,7 +1761,7 @@ yyreduce:
     break;
 
   case 54: /* mult: DIV  */
-#line 501 "parser.y"
+#line 500 "parser.y"
     {
       (yyval.ast) = newASTNodeLine("/", g_last_line);
     }
@@ -1769,7 +1769,7 @@ yyreduce:
     break;
 
   case 55: /* fator: OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS  */
-#line 509 "parser.y"
+#line 508 "parser.y"
     {
       AST *node = newASTNodeLine("fator(paren)", g_last_line);
       addChild(node, newASTNodeLine("(", g_last_line));
@@ -1781,7 +1781,7 @@ yyreduce:
     break;
 
   case 56: /* fator: var  */
-#line 517 "parser.y"
+#line 516 "parser.y"
     {
       AST *node = newASTNodeLine("fator(var)", g_last_line);
       addChild(node, (yyvsp[0].ast));
@@ -1791,7 +1791,7 @@ yyreduce:
     break;
 
   case 57: /* fator: ativacao  */
-#line 523 "parser.y"
+#line 522 "parser.y"
     {
       AST *node = newASTNodeLine("fator(ativ)", g_last_line);
       addChild(node, (yyvsp[0].ast));
@@ -1801,7 +1801,7 @@ yyreduce:
     break;
 
   case 58: /* fator: NUM  */
-#line 529 "parser.y"
+#line 528 "parser.y"
     {
       char buf[64];
       sprintf(buf, "NUM:%d", (yyvsp[0].ival));
@@ -1813,7 +1813,7 @@ yyreduce:
     break;
 
   case 59: /* ativacao: ID OPEN_PARENTHESIS args CLOSE_PARENTHESIS  */
-#line 541 "parser.y"
+#line 540 "parser.y"
     {
       AST *node = newASTNodeLine("ativacao", g_last_line);
       addChild(node, newASTNodeLine((yyvsp[-3].str), g_last_line));
@@ -1827,7 +1827,7 @@ yyreduce:
     break;
 
   case 60: /* args: arg_lista  */
-#line 555 "parser.y"
+#line 554 "parser.y"
     {
       (yyval.ast) = (yyvsp[0].ast);
     }
@@ -1835,7 +1835,7 @@ yyreduce:
     break;
 
   case 61: /* args: %empty  */
-#line 559 "parser.y"
+#line 558 "parser.y"
     {
       AST *node = newASTNodeLine("args_vazio", g_last_line);
       (yyval.ast) = node;
@@ -1844,7 +1844,7 @@ yyreduce:
     break;
 
   case 62: /* arg_lista: arg_lista COMMA expressao  */
-#line 568 "parser.y"
+#line 567 "parser.y"
     {
       AST *node = newASTNodeLine("arg_lista", g_last_line);
       addChild(node, (yyvsp[-2].ast));
@@ -1856,7 +1856,7 @@ yyreduce:
     break;
 
   case 63: /* arg_lista: expressao  */
-#line 576 "parser.y"
+#line 575 "parser.y"
     {
       AST *node = newASTNodeLine("arg_lista", g_last_line);
       addChild(node, (yyvsp[0].ast));
@@ -2059,7 +2059,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 583 "parser.y"
+#line 582 "parser.y"
 
 
 /* Erro sintático */
