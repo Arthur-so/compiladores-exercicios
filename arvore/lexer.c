@@ -156,7 +156,7 @@ int classifica_lexema(char* lexeme, int estado) {
 }
 
 /* ---------------------------------------------------------
-   5) get_token() -> loop do autômato para pegar próximo token
+   5) get_token() -> loop para pegar próximo token
    --------------------------------------------------------- */
 Token* get_token(Lexer *lexer) {
     char c = 0;
@@ -179,18 +179,17 @@ Token* get_token(Lexer *lexer) {
 
         /* ---------- TRATAMENTO DE ERRO LÉXICO ---------- */
         if (lexer->current_state == -1) {
-            /* Guardamos o char que causou o erro */
+            /* Guarda o char que causou o erro */
             aux_lexeme[char_lexeme_id++] = c;
             aux_lexeme[char_lexeme_id] = '\0';
             lexer->buffer->next_char_id++;
 
-            /* Marcamos erro e preenchemos token */
+            /* Marca erro e preenche token */
             lexer->token->error = 1;
             strncpy(lexer->token->lexeme, aux_lexeme, sizeof(lexer->token->lexeme));
             lexer->token->line = lexer->buffer->next_char_line;
             lexer->token->column = lexer->buffer->next_char_id;
 
-            /* Em vez de break, RETORNAMOS O TOKEN AGORA! */
             return lexer->token;
         }
 
@@ -222,6 +221,7 @@ Token* get_token(Lexer *lexer) {
 
         /* Se for pra avançar, adiciona char no aux_lexeme se apropriado */
         if (avance) {
+            /* Verifica se precisa adicionar ao token (Ex: o que está dentro do comentário é ignorado) */
             if (AdicionaAoToken[char_code] &&
                 (AdicionaAoTokenEstado[novo_estado] || 
                  AdicionaAoTokenEstado[lexer->current_state])) 
@@ -241,6 +241,7 @@ Token* get_token(Lexer *lexer) {
 /* ---------------------------------------------------------
    6) Tabelas do autômato
    --------------------------------------------------------- */
+/* Tabela de aceitação, é um estado final */
 int Aceita[32] = {
   0,0,0,0,0,0,0,0,0,0,
   1,1,
@@ -249,17 +250,16 @@ int Aceita[32] = {
   1,1,1,1,1,1,1,1,1,1,1,1
 };
 
+/* Baseado nos simbolos da linguagem decide se inclui no lexema () */
 int AdicionaAoToken[20] = {
   1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,0,0
+  1,1,1,1,1,1,1,1,0,0 //Não adiciona Branco e outro ao lexema
 };
 
 int AdicionaAoTokenEstado[32] = {
-  1,1,1,1,1,1,1,1,0,0,
-  1,1,
-  1,1,1,1,1,1,1,
-  1,
-  1,1,1,1,1,1,1,1,1,1,1,1
+  1,1,1,1,1,1,1,1,
+  0,0, // Inora os estados que representam o meio do comentário
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 };
 
 
@@ -419,16 +419,16 @@ int T[32][20] = {
 };
 
 int Avance[32][20] = {
-   {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-   {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0},
-   {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-   {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-   {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+   {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0}, // Estado 0
+   {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, // Estado 1
+   {0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, // Estado 2
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0}, // Estado 3
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0}, // Estado 4
+   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0}, // Estado 5
+   {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0}, // Estado 6
+   {0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, // Estado 7
+   {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, // Estado 8
+   {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, // Estado 9
    /* states 10..31 => todos 0 */
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},

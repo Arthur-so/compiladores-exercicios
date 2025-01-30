@@ -8,9 +8,6 @@ typedef struct AST {
     struct AST **children;
 } AST;
 
-/* Cria um nó com line=0 (se você quiser manter a versão antiga) */
-AST* newASTNode(const char *name);
-
 /* Cria um nó com uma linha especificada */
 AST* newASTNodeLine(const char *name, int line);
 

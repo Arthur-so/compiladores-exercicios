@@ -7,20 +7,20 @@
 #include "lexeme.h"
 #include "ast.h"
 
-/* Precisamos de yylex() e yyerror() */
+/* Precisa de yylex() e yyerror() */
 int yylex();
 void yyerror(const char *s);
 
-/* Variáveis globais p/ armazenar o "último token lido" (para msg de erro) */
+/* Variáveis globais p/ armazenar o "último token lido" (p/ msg de erro) */
 char g_last_lexeme[64];
 int  g_last_line   = 1;
 int  g_last_col    = 1;
 
-/* Raiz da AST final */
+/* Raiz da AST */
 AST *g_root = NULL;
 %}
 
-/* Se quisermos AST como valor semântico das regras... */
+/* AST como valor semântico das regras */
 %union {
     AST *ast;   /* Para nós da AST */
     char *str;  /* Para lexemas de ID */
@@ -91,7 +91,7 @@ declaracao:
   ;
 
 /* var_declaracao -> tipo_especificador ID ; 
-   ou           -> tipo_especificador ID [ NUM ] ; */
+                   | tipo_especificador ID [ NUM ] ; */
 var_declaracao:
     tipo_especificador ID SEMICOLON
     {
@@ -582,7 +582,7 @@ arg_lista:
 
 %%
 
-/* Rotina de erro sintático */
+/* Erro sintático */
 void yyerror(const char *s) {
     fprintf(stderr, 
       "ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",

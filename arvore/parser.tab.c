@@ -76,16 +76,16 @@
 #include "lexeme.h"
 #include "ast.h"
 
-/* Precisamos de yylex() e yyerror() */
+/* Precisa de yylex() e yyerror() */
 int yylex();
 void yyerror(const char *s);
 
-/* Variáveis globais p/ armazenar o "último token lido" (para msg de erro) */
+/* Variáveis globais p/ armazenar o "último token lido" (p/ msg de erro) */
 char g_last_lexeme[64];
 int  g_last_line   = 1;
 int  g_last_col    = 1;
 
-/* Raiz da AST final */
+/* Raiz da AST */
 AST *g_root = NULL;
 
 #line 92 "parser.tab.c"
@@ -2062,7 +2062,7 @@ yyreturnlab:
 #line 583 "parser.y"
 
 
-/* Rotina de erro sintático */
+/* Erro sintático */
 void yyerror(const char *s) {
     fprintf(stderr, 
       "ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",

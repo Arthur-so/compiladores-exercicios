@@ -3,16 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Mantemos a versão antiga, se quiser criar nó sem linha (line=0) */
-AST* newASTNode(const char *name) {
-    AST *node = (AST*)malloc(sizeof(AST));
-    node->name = strdup(name);
-    node->line = 0; /* linha "desconhecida" */
-    node->numChildren = 0;
-    node->children = NULL;
-    return node;
-}
-
 /* Nova função: cria nó com a 'line' desejada */
 AST* newASTNodeLine(const char *name, int line) {
     AST *node = (AST*)malloc(sizeof(AST));

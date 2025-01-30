@@ -2,13 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Inclua o "ast.h" ANTES do "parser.tab.h" */
 #include "ast.h"
 #include "parser.tab.h"
 #include "lexeme.h"
 
 
-/* Precisamos acessar g_last_* do parser.y */
 extern char g_last_lexeme[64];
 extern int  g_last_line;
 extern int  g_last_col;
@@ -16,10 +14,10 @@ extern int  g_last_col;
 /* O lexer global vem de main.c */
 extern Lexer *lexer;
 
-/* Precisamos do yylval se quisermos setar valores semânticos */
+/* Setar valores semânticos */
 extern YYSTYPE yylval;
 
-/* Definições internas (os mesmos #define do lexer.c) */
+/* Os mesmos #define do lexer.c */
 #define L_KW_ELSE     100
 #define L_KW_IF       101
 #define L_KW_INT      102
@@ -85,12 +83,12 @@ int yylex(void) {
         case L_KW_WHILE:  return WHILE;
 
         case L_ID:
-            /* yylval.str => uma cópia do lexeme */
+            /* Cópia do lexeme */
             yylval.str = strdup(t->lexeme);
             return ID;
 
         case L_NUM:
-            /* yylval.ival => valor do número */
+            /* Valor do número */
             yylval.ival = atoi(t->lexeme);
             return NUM;
 
