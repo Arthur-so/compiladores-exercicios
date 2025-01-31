@@ -76,11 +76,11 @@
 #include "lexeme.h"
 #include "ast.h"
 
-/* Precisa de yylex() e yyerror() */
+/* Declarações necessárias para o Bison */
 int yylex();
 void yyerror(const char *s);
 
-/* Variáveis globais p/ armazenar o "último token lido" (p/ msg de erro) */
+/* Variáveis globais para armazenar o "último token lido" (para mensagens de erro) */
 char g_last_lexeme[64];
 int  g_last_line   = 1;
 int  g_last_col    = 1;
@@ -564,13 +564,13 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    50,    50,    61,    68,    78,    84,    95,   107,   132,
-     137,   146,   162,   166,   175,   183,   193,   201,   215,   228,
-     236,   244,   252,   260,   266,   272,   278,   284,   294,   301,
-     311,   321,   337,   351,   358,   370,   378,   386,   393,   407,
-     415,   423,   427,   431,   435,   439,   443,   451,   459,   467,
-     471,   479,   487,   495,   499,   507,   515,   521,   527,   539,
-     553,   558,   566,   574
+       0,    51,    51,    62,    70,    81,    88,    99,   112,   138,
+     144,   154,   173,   178,   188,   197,   208,   218,   234,   248,
+     257,   266,   275,   284,   291,   298,   305,   312,   323,   331,
+     340,   351,   368,   383,   391,   404,   413,   422,   430,   445,
+     454,   463,   468,   473,   478,   483,   488,   497,   506,   515,
+     520,   529,   538,   547,   552,   561,   570,   577,   584,   597,
+     612,   618,   627,   636
 };
 #endif
 
@@ -1201,9 +1201,9 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* programa: declaracao_lista  */
-#line 51 "parser.y"
+#line 52 "parser.y"
     {
-        /* A raiz da AST é a lista de declarações */
+        /* Cria o nó raiz da AST */
         AST *node = newASTNodeLine("programa", g_last_line);
         addChild(node, (yyvsp[0].ast));
         g_root = node;
@@ -1212,661 +1212,724 @@ yyreduce:
     break;
 
   case 3: /* declaracao_lista: declaracao_lista declaracao  */
-#line 62 "parser.y"
+#line 63 "parser.y"
       {
+        /* Cria nó para lista de declarações e adiciona filhos */
         AST *node = newASTNodeLine("declaracao_lista", g_last_line);
         addChild(node, (yyvsp[-1].ast));
         addChild(node, (yyvsp[0].ast));
         (yyval.ast) = node;
       }
-#line 1223 "parser.tab.c"
+#line 1224 "parser.tab.c"
     break;
 
   case 4: /* declaracao_lista: declaracao  */
-#line 69 "parser.y"
+#line 71 "parser.y"
       {
+        /* Cria nó para lista de declarações com uma única declaração */
         AST *node = newASTNodeLine("declaracao_lista", g_last_line);
         addChild(node, (yyvsp[0].ast));
         (yyval.ast) = node;
       }
-#line 1233 "parser.tab.c"
+#line 1235 "parser.tab.c"
     break;
 
   case 5: /* declaracao: var_declaracao  */
-#line 79 "parser.y"
+#line 82 "parser.y"
     {
+      /* Cria nó para declaração de variável */
       AST *node = newASTNodeLine("declaracao(var)", g_last_line);
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1243 "parser.tab.c"
+#line 1246 "parser.tab.c"
     break;
 
   case 6: /* declaracao: fun_declaracao  */
-#line 85 "parser.y"
+#line 89 "parser.y"
     {
+      /* Cria nó para declaração de função */
       AST *node = newASTNodeLine("declaracao(fun)", g_last_line);
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1253 "parser.tab.c"
+#line 1257 "parser.tab.c"
     break;
 
   case 7: /* var_declaracao: tipo_especificador ID SEMICOLON  */
-#line 96 "parser.y"
+#line 100 "parser.y"
     {
+      /* Cria nó para declaração de variável simples */
       AST *node = newASTNodeLine("var_declaracao", g_last_line);
       addChild(node, (yyvsp[-2].ast));
 
       AST *idNode = newASTNodeLine((yyvsp[-1].str), g_last_line);
       addChild(node, idNode);
 
-      addChild(node, newASTNodeLine(";", g_last_line));
-      free((yyvsp[-1].str)); /* libera a string do yylval.str */
+      /* Removido: addChild(node, newASTNodeLine(";", g_last_line)); */
+      free((yyvsp[-1].str)); /* Libera a string do ID */
       (yyval.ast) = node;
     }
-#line 1269 "parser.tab.c"
+#line 1274 "parser.tab.c"
     break;
 
   case 8: /* var_declaracao: tipo_especificador ID OPEN_SQUARE_BRACKETS NUM CLOSE_SQUARE_BRACKETS SEMICOLON  */
-#line 108 "parser.y"
+#line 113 "parser.y"
     {
+      /* Cria nó para declaração de vetor */
       AST *node = newASTNodeLine("var_declaracao_array", g_last_line);
       addChild(node, (yyvsp[-5].ast));
 
       AST *idNode = newASTNodeLine((yyvsp[-4].str), g_last_line);
       addChild(node, idNode);
 
-      addChild(node, newASTNodeLine("[", g_last_line));
+      /* Removidos: addChild(node, newASTNodeLine("[", g_last_line));
+         addChild(node, newASTNodeLine("]", g_last_line));
+         addChild(node, newASTNodeLine(";", g_last_line)); */
 
+      /* Adiciona o número do tamanho do vetor */
       char buf[64];
       sprintf(buf, "NUM:%d", (yyvsp[-2].ival)); 
       AST *numNode = newASTNodeLine(buf, g_last_line);
       addChild(node, numNode);
 
-      addChild(node, newASTNodeLine("]", g_last_line));
-      addChild(node, newASTNodeLine(";", g_last_line));
-
-      free((yyvsp[-4].str));
+      free((yyvsp[-4].str)); /* Libera a string do ID */
       (yyval.ast) = node;
     }
-#line 1294 "parser.tab.c"
+#line 1300 "parser.tab.c"
     break;
 
   case 9: /* tipo_especificador: INT  */
-#line 133 "parser.y"
+#line 139 "parser.y"
     {
+      /* Cria nó para tipo INT */
       AST *node = newASTNodeLine("INT", g_last_line);
       (yyval.ast) = node;
     }
-#line 1303 "parser.tab.c"
+#line 1310 "parser.tab.c"
     break;
 
   case 10: /* tipo_especificador: VOID  */
-#line 138 "parser.y"
+#line 145 "parser.y"
     {
+      /* Cria nó para tipo VOID */
       AST *node = newASTNodeLine("VOID", g_last_line);
       (yyval.ast) = node;
     }
-#line 1312 "parser.tab.c"
+#line 1320 "parser.tab.c"
     break;
 
   case 11: /* fun_declaracao: tipo_especificador ID OPEN_PARENTHESIS params CLOSE_PARENTHESIS composto_decl  */
-#line 147 "parser.y"
+#line 155 "parser.y"
     {
+      /* Cria nó para declaração de função */
       AST *node = newASTNodeLine("fun_declaracao", g_last_line);
       addChild(node, (yyvsp[-5].ast));
       addChild(node, newASTNodeLine((yyvsp[-4].str), g_last_line));
-      addChild(node, newASTNodeLine("(", g_last_line));
-      addChild(node, (yyvsp[-2].ast));
-      addChild(node, newASTNodeLine(")", g_last_line));
-      addChild(node, (yyvsp[0].ast));
-      free((yyvsp[-4].str));
+
+      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
+         addChild(node, newASTNodeLine(")", g_last_line)); */
+
+      addChild(node, (yyvsp[-2].ast)); /* Adiciona parâmetros */
+      addChild(node, (yyvsp[0].ast)); /* Adiciona corpo da função */
+      free((yyvsp[-4].str)); /* Libera a string do ID */
       (yyval.ast) = node;
     }
-#line 1328 "parser.tab.c"
+#line 1339 "parser.tab.c"
     break;
 
   case 12: /* params: param_lista  */
-#line 163 "parser.y"
+#line 174 "parser.y"
     {
+      /* Passa a lista de parâmetros */
       (yyval.ast) = (yyvsp[0].ast);
     }
-#line 1336 "parser.tab.c"
+#line 1348 "parser.tab.c"
     break;
 
   case 13: /* params: VOID  */
-#line 167 "parser.y"
+#line 179 "parser.y"
     {
+      /* Cria nó indicando que não há parâmetros */
       AST *node = newASTNodeLine("params_VOID", g_last_line);
       (yyval.ast) = node;
     }
-#line 1345 "parser.tab.c"
+#line 1358 "parser.tab.c"
     break;
 
   case 14: /* param_lista: param_lista COMMA param  */
-#line 176 "parser.y"
+#line 189 "parser.y"
     {
+      /* Cria nó para lista de parâmetros e adiciona o novo parâmetro */
       AST *node = newASTNodeLine("param_lista", g_last_line);
       addChild(node, (yyvsp[-2].ast));
-      addChild(node, newASTNodeLine(",", g_last_line));
+      /* Removido: addChild(node, newASTNodeLine(",", g_last_line)); */
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1357 "parser.tab.c"
+#line 1371 "parser.tab.c"
     break;
 
   case 15: /* param_lista: param  */
-#line 184 "parser.y"
+#line 198 "parser.y"
     {
+      /* Cria nó para lista de parâmetros com um único parâmetro */
       AST *node = newASTNodeLine("param_lista", g_last_line);
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1367 "parser.tab.c"
+#line 1382 "parser.tab.c"
     break;
 
   case 16: /* param: tipo_especificador ID  */
-#line 194 "parser.y"
+#line 209 "parser.y"
     {
+      /* Cria nó para parâmetro simples */
       AST *node = newASTNodeLine("param", g_last_line);
       addChild(node, (yyvsp[-1].ast));
-      addChild(node, newASTNodeLine((yyvsp[0].str), g_last_line));
-      free((yyvsp[0].str));
+      AST *idNode = newASTNodeLine((yyvsp[0].str), g_last_line);
+      addChild(node, idNode);
+      free((yyvsp[0].str)); /* Libera a string do ID */
       (yyval.ast) = node;
     }
-#line 1379 "parser.tab.c"
+#line 1396 "parser.tab.c"
     break;
 
   case 17: /* param: tipo_especificador ID OPEN_SQUARE_BRACKETS CLOSE_SQUARE_BRACKETS  */
-#line 202 "parser.y"
+#line 219 "parser.y"
     {
+      /* Cria nó para parâmetro que é um vetor */
       AST *node = newASTNodeLine("param_array", g_last_line);
       addChild(node, (yyvsp[-3].ast));
-      addChild(node, newASTNodeLine((yyvsp[-2].str), g_last_line));
-      addChild(node, newASTNodeLine("[", g_last_line));
-      addChild(node, newASTNodeLine("]", g_last_line));
-      free((yyvsp[-2].str));
+      AST *idNode = newASTNodeLine((yyvsp[-2].str), g_last_line);
+      addChild(node, idNode);
+      /* Removidos: addChild(node, newASTNodeLine("[", g_last_line));
+         addChild(node, newASTNodeLine("]", g_last_line)); */
+      free((yyvsp[-2].str)); /* Libera a string do ID */
       (yyval.ast) = node;
     }
-#line 1393 "parser.tab.c"
+#line 1412 "parser.tab.c"
     break;
 
   case 18: /* composto_decl: OPEN_CURLY_BRACKETS local_declaracoes statement_lista CLOSE_CURLY_BRACKETS  */
-#line 216 "parser.y"
+#line 235 "parser.y"
     {
+      /* Cria nó para corpo composto da função */
       AST *node = newASTNodeLine("composto_decl", g_last_line);
-      addChild(node, newASTNodeLine("{", g_last_line));
-      addChild(node, (yyvsp[-2].ast));
-      addChild(node, (yyvsp[-1].ast));
-      addChild(node, newASTNodeLine("}", g_last_line));
-      (yyval.ast) = node;
-    }
-#line 1406 "parser.tab.c"
-    break;
-
-  case 19: /* local_declaracoes: local_declaracoes var_declaracao  */
-#line 229 "parser.y"
-    {
-      AST *node = newASTNodeLine("local_declaracoes", g_last_line);
-      addChild(node, (yyvsp[-1].ast));
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1417 "parser.tab.c"
-    break;
-
-  case 20: /* local_declaracoes: %empty  */
-#line 236 "parser.y"
-    {
-      AST *node = newASTNodeLine("local_declaracoes_vazio", g_last_line);
+      /* Removidos: addChild(node, newASTNodeLine("{", g_last_line));
+         addChild(node, newASTNodeLine("}", g_last_line)); */
+      addChild(node, (yyvsp[-2].ast)); /* Adiciona declarações locais */
+      addChild(node, (yyvsp[-1].ast)); /* Adiciona lista de statements */
       (yyval.ast) = node;
     }
 #line 1426 "parser.tab.c"
     break;
 
-  case 21: /* statement_lista: statement_lista statement  */
-#line 245 "parser.y"
+  case 19: /* local_declaracoes: local_declaracoes var_declaracao  */
+#line 249 "parser.y"
     {
+      /* Cria nó para declarações locais e adiciona a nova declaração */
+      AST *node = newASTNodeLine("local_declaracoes", g_last_line);
+      addChild(node, (yyvsp[-1].ast));
+      addChild(node, (yyvsp[0].ast));
+      (yyval.ast) = node;
+    }
+#line 1438 "parser.tab.c"
+    break;
+
+  case 20: /* local_declaracoes: %empty  */
+#line 257 "parser.y"
+    {
+      /* Cria nó indicando que não há declarações locais */
+      AST *node = newASTNodeLine("local_declaracoes_vazio", g_last_line);
+      (yyval.ast) = node;
+    }
+#line 1448 "parser.tab.c"
+    break;
+
+  case 21: /* statement_lista: statement_lista statement  */
+#line 267 "parser.y"
+    {
+      /* Cria nó para lista de statements e adiciona o novo statement */
       AST *node = newASTNodeLine("statement_lista", g_last_line);
       addChild(node, (yyvsp[-1].ast));
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1437 "parser.tab.c"
+#line 1460 "parser.tab.c"
     break;
 
   case 22: /* statement_lista: %empty  */
-#line 252 "parser.y"
+#line 275 "parser.y"
     {
+      /* Cria nó indicando que não há statements */
       AST *node = newASTNodeLine("statement_lista_vazio", g_last_line);
       (yyval.ast) = node;
     }
-#line 1446 "parser.tab.c"
+#line 1470 "parser.tab.c"
     break;
 
   case 23: /* statement: expressao_decl  */
-#line 261 "parser.y"
+#line 285 "parser.y"
     {
+      /* Cria nó para statement de expressão */
       AST *node = newASTNodeLine("statement(expr)", g_last_line);
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1456 "parser.tab.c"
+#line 1481 "parser.tab.c"
     break;
 
   case 24: /* statement: composto_decl  */
-#line 267 "parser.y"
+#line 292 "parser.y"
     {
+      /* Cria nó para statement composto */
       AST *node = newASTNodeLine("statement(composto)", g_last_line);
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1466 "parser.tab.c"
+#line 1492 "parser.tab.c"
     break;
 
   case 25: /* statement: selecao_decl  */
-#line 273 "parser.y"
+#line 299 "parser.y"
     {
+      /* Cria nó para statement de seleção */
       AST *node = newASTNodeLine("statement(selecao)", g_last_line);
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1476 "parser.tab.c"
+#line 1503 "parser.tab.c"
     break;
 
   case 26: /* statement: iteracao_decl  */
-#line 279 "parser.y"
+#line 306 "parser.y"
     {
+      /* Cria nó para statement de iteração */
       AST *node = newASTNodeLine("statement(iteracao)", g_last_line);
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1486 "parser.tab.c"
+#line 1514 "parser.tab.c"
     break;
 
   case 27: /* statement: retorno_decl  */
-#line 285 "parser.y"
+#line 313 "parser.y"
     {
+      /* Cria nó para statement de retorno */
       AST *node = newASTNodeLine("statement(retorno)", g_last_line);
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1496 "parser.tab.c"
+#line 1525 "parser.tab.c"
     break;
 
   case 28: /* expressao_decl: expressao SEMICOLON  */
-#line 295 "parser.y"
+#line 324 "parser.y"
     {
+      /* Cria nó para declaração de expressão */
       AST *node = newASTNodeLine("expressao_decl", g_last_line);
       addChild(node, (yyvsp[-1].ast));
-      addChild(node, newASTNodeLine(";", g_last_line));
+      /* Removido: addChild(node, newASTNodeLine(";", g_last_line)); */
       (yyval.ast) = node;
     }
-#line 1507 "parser.tab.c"
+#line 1537 "parser.tab.c"
     break;
 
   case 29: /* expressao_decl: SEMICOLON  */
-#line 302 "parser.y"
+#line 332 "parser.y"
     {
-      AST *node = newASTNodeLine("expressao_decl_empty", g_last_line);
-      addChild(node, newASTNodeLine(";", g_last_line));
-      (yyval.ast) = node;
+      /* Representa uma declaração de expressão vazia; retorna NULL para evitar nós desnecessários */
+      (yyval.ast) = NULL;
     }
-#line 1517 "parser.tab.c"
+#line 1546 "parser.tab.c"
     break;
 
   case 30: /* selecao_decl: IF OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement  */
-#line 312 "parser.y"
+#line 341 "parser.y"
     {
+      /* Cria nó para seleção "if" sem "(", ")" */
       AST *node = newASTNodeLine("selecao_if", g_last_line);
       addChild(node, newASTNodeLine("IF", g_last_line));
-      addChild(node, newASTNodeLine("(", g_last_line));
-      addChild(node, (yyvsp[-2].ast));
-      addChild(node, newASTNodeLine(")", g_last_line));
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1531 "parser.tab.c"
-    break;
-
-  case 31: /* selecao_decl: IF OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement ELSE statement  */
-#line 322 "parser.y"
-    {
-      AST *node = newASTNodeLine("selecao_if_else", g_last_line);
-      addChild(node, newASTNodeLine("IF", g_last_line));
-      addChild(node, newASTNodeLine("(", g_last_line));
-      addChild(node, (yyvsp[-4].ast));
-      addChild(node, newASTNodeLine(")", g_last_line));
-      addChild(node, (yyvsp[-2].ast));
-      addChild(node, newASTNodeLine("ELSE", g_last_line));
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1547 "parser.tab.c"
-    break;
-
-  case 32: /* iteracao_decl: WHILE OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement  */
-#line 338 "parser.y"
-    {
-      AST *node = newASTNodeLine("iteracao_while", g_last_line);
-      addChild(node, newASTNodeLine("WHILE", g_last_line));
-      addChild(node, newASTNodeLine("(", g_last_line));
-      addChild(node, (yyvsp[-2].ast));
-      addChild(node, newASTNodeLine(")", g_last_line));
-      addChild(node, (yyvsp[0].ast));
+      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
+         addChild(node, newASTNodeLine(")", g_last_line)); */
+      addChild(node, (yyvsp[-2].ast)); /* Adiciona a expressão */
+      addChild(node, (yyvsp[0].ast)); /* Adiciona o statement */
       (yyval.ast) = node;
     }
 #line 1561 "parser.tab.c"
     break;
 
-  case 33: /* retorno_decl: RETURN SEMICOLON  */
+  case 31: /* selecao_decl: IF OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement ELSE statement  */
 #line 352 "parser.y"
     {
-      AST *node = newASTNodeLine("retorno_decl", g_last_line);
-      addChild(node, newASTNodeLine("RETURN", g_last_line));
-      addChild(node, newASTNodeLine(";", g_last_line));
+      /* Cria nó para seleção "if-else" sem "(", ")" */
+      AST *node = newASTNodeLine("selecao_if_else", g_last_line);
+      addChild(node, newASTNodeLine("IF", g_last_line));
+      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
+         addChild(node, newASTNodeLine(")", g_last_line)); */
+      addChild(node, (yyvsp[-4].ast)); /* Adiciona a expressão */
+      addChild(node, (yyvsp[-2].ast)); /* Adiciona o statement do if */
+      addChild(node, newASTNodeLine("ELSE", g_last_line));
+      addChild(node, (yyvsp[0].ast)); /* Adiciona o statement do else */
       (yyval.ast) = node;
     }
-#line 1572 "parser.tab.c"
+#line 1578 "parser.tab.c"
+    break;
+
+  case 32: /* iteracao_decl: WHILE OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement  */
+#line 369 "parser.y"
+    {
+      /* Cria nó para iteração "while" sem "(", ")" */
+      AST *node = newASTNodeLine("iteracao_while", g_last_line);
+      addChild(node, newASTNodeLine("WHILE", g_last_line));
+      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
+         addChild(node, newASTNodeLine(")", g_last_line)); */
+      addChild(node, (yyvsp[-2].ast)); /* Adiciona a expressão */
+      addChild(node, (yyvsp[0].ast)); /* Adiciona o statement */
+      (yyval.ast) = node;
+    }
+#line 1593 "parser.tab.c"
+    break;
+
+  case 33: /* retorno_decl: RETURN SEMICOLON  */
+#line 384 "parser.y"
+    {
+      /* Cria nó para retorno vazio */
+      AST *node = newASTNodeLine("retorno_decl", g_last_line);
+      addChild(node, newASTNodeLine("RETURN", g_last_line));
+      /* Removido: addChild(node, newASTNodeLine(";", g_last_line)); */
+      (yyval.ast) = node;
+    }
+#line 1605 "parser.tab.c"
     break;
 
   case 34: /* retorno_decl: RETURN expressao SEMICOLON  */
-#line 359 "parser.y"
+#line 392 "parser.y"
     {
+      /* Cria nó para retorno com expressão */
       AST *node = newASTNodeLine("retorno_decl", g_last_line);
       addChild(node, newASTNodeLine("RETURN", g_last_line));
       addChild(node, (yyvsp[-1].ast));
-      addChild(node, newASTNodeLine(";", g_last_line));
+      /* Removido: addChild(node, newASTNodeLine(";", g_last_line)); */
       (yyval.ast) = node;
     }
-#line 1584 "parser.tab.c"
+#line 1618 "parser.tab.c"
     break;
 
   case 35: /* expressao: var EQUAL expressao  */
-#line 371 "parser.y"
+#line 405 "parser.y"
     {
+      /* Cria nó para atribuição */
       AST *node = newASTNodeLine("expressao_atribuicao", g_last_line);
-      addChild(node, (yyvsp[-2].ast));
+      addChild(node, (yyvsp[-2].ast)); /* Adiciona a variável */
       addChild(node, newASTNodeLine("=", g_last_line));
-      addChild(node, (yyvsp[0].ast));
+      addChild(node, (yyvsp[0].ast)); /* Adiciona a expressão */
       (yyval.ast) = node;
     }
-#line 1596 "parser.tab.c"
+#line 1631 "parser.tab.c"
     break;
 
   case 36: /* expressao: simples_expressao  */
-#line 379 "parser.y"
+#line 414 "parser.y"
     {
+      /* Passa a expressão simples */
       (yyval.ast) = (yyvsp[0].ast);
     }
-#line 1604 "parser.tab.c"
+#line 1640 "parser.tab.c"
     break;
 
   case 37: /* var: ID  */
-#line 387 "parser.y"
+#line 423 "parser.y"
     {
+      /* Cria nó para variável simples */
       AST *node = newASTNodeLine("var", g_last_line);
       addChild(node, newASTNodeLine((yyvsp[0].str), g_last_line));
-      free((yyvsp[0].str));
+      free((yyvsp[0].str)); /* Libera a string do ID */
       (yyval.ast) = node;
     }
-#line 1615 "parser.tab.c"
+#line 1652 "parser.tab.c"
     break;
 
   case 38: /* var: ID OPEN_SQUARE_BRACKETS expressao CLOSE_SQUARE_BRACKETS  */
-#line 394 "parser.y"
+#line 431 "parser.y"
     {
+      /* Cria nó para variável com índice */
       AST *node = newASTNodeLine("var_array", g_last_line);
       addChild(node, newASTNodeLine((yyvsp[-3].str), g_last_line));
-      addChild(node, newASTNodeLine("[", g_last_line));
-      addChild(node, (yyvsp[-1].ast));
-      addChild(node, newASTNodeLine("]", g_last_line));
-      free((yyvsp[-3].str));
+      /* Removidos: addChild(node, newASTNodeLine("[", g_last_line));
+         addChild(node, newASTNodeLine("]", g_last_line)); */
+      addChild(node, (yyvsp[-1].ast)); /* Adiciona a expressão de índice */
+      free((yyvsp[-3].str)); /* Libera a string do ID */
       (yyval.ast) = node;
     }
-#line 1629 "parser.tab.c"
+#line 1667 "parser.tab.c"
     break;
 
   case 39: /* simples_expressao: soma_expressao relacional soma_expressao  */
-#line 408 "parser.y"
+#line 446 "parser.y"
     {
+      /* Cria nó para expressão relacional */
       AST *node = newASTNodeLine("simples_expressao", g_last_line);
-      addChild(node, (yyvsp[-2].ast));
-      addChild(node, (yyvsp[-1].ast));
-      addChild(node, (yyvsp[0].ast));
+      addChild(node, (yyvsp[-2].ast)); /* Adiciona a primeira soma_expressao */
+      addChild(node, (yyvsp[-1].ast)); /* Adiciona o operador relacional */
+      addChild(node, (yyvsp[0].ast)); /* Adiciona a segunda soma_expressao */
       (yyval.ast) = node;
     }
-#line 1641 "parser.tab.c"
+#line 1680 "parser.tab.c"
     break;
 
   case 40: /* simples_expressao: soma_expressao  */
-#line 416 "parser.y"
+#line 455 "parser.y"
     {
+      /* Passa a soma_expressao */
       (yyval.ast) = (yyvsp[0].ast);
-    }
-#line 1649 "parser.tab.c"
-    break;
-
-  case 41: /* relacional: MINOR_EQUAL  */
-#line 424 "parser.y"
-    {
-      (yyval.ast) = newASTNodeLine("<=", g_last_line);
-    }
-#line 1657 "parser.tab.c"
-    break;
-
-  case 42: /* relacional: MINOR  */
-#line 428 "parser.y"
-    {
-      (yyval.ast) = newASTNodeLine("<", g_last_line);
-    }
-#line 1665 "parser.tab.c"
-    break;
-
-  case 43: /* relacional: GREATER  */
-#line 432 "parser.y"
-    {
-      (yyval.ast) = newASTNodeLine(">", g_last_line);
-    }
-#line 1673 "parser.tab.c"
-    break;
-
-  case 44: /* relacional: GREATER_EQUAL  */
-#line 436 "parser.y"
-    {
-      (yyval.ast) = newASTNodeLine(">=", g_last_line);
-    }
-#line 1681 "parser.tab.c"
-    break;
-
-  case 45: /* relacional: EQUAL_EQUAL  */
-#line 440 "parser.y"
-    {
-      (yyval.ast) = newASTNodeLine("==", g_last_line);
     }
 #line 1689 "parser.tab.c"
     break;
 
-  case 46: /* relacional: DIFFERENT  */
-#line 444 "parser.y"
+  case 41: /* relacional: MINOR_EQUAL  */
+#line 464 "parser.y"
     {
-      (yyval.ast) = newASTNodeLine("!=", g_last_line);
+      /* Cria nó para operador <= */
+      (yyval.ast) = newASTNodeLine("<=", g_last_line);
     }
-#line 1697 "parser.tab.c"
+#line 1698 "parser.tab.c"
     break;
 
-  case 47: /* soma_expressao: soma_expressao soma termo  */
-#line 452 "parser.y"
+  case 42: /* relacional: MINOR  */
+#line 469 "parser.y"
     {
-      AST *node = newASTNodeLine("soma_expressao", g_last_line);
-      addChild(node, (yyvsp[-2].ast));
-      addChild(node, (yyvsp[-1].ast));
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
+      /* Cria nó para operador < */
+      (yyval.ast) = newASTNodeLine("<", g_last_line);
     }
-#line 1709 "parser.tab.c"
+#line 1707 "parser.tab.c"
     break;
 
-  case 48: /* soma_expressao: termo  */
-#line 460 "parser.y"
+  case 43: /* relacional: GREATER  */
+#line 474 "parser.y"
     {
-      (yyval.ast) = (yyvsp[0].ast);
+      /* Cria nó para operador > */
+      (yyval.ast) = newASTNodeLine(">", g_last_line);
     }
-#line 1717 "parser.tab.c"
+#line 1716 "parser.tab.c"
     break;
 
-  case 49: /* soma: PLUS  */
-#line 468 "parser.y"
+  case 44: /* relacional: GREATER_EQUAL  */
+#line 479 "parser.y"
     {
-      (yyval.ast) = newASTNodeLine("+", g_last_line);
+      /* Cria nó para operador >= */
+      (yyval.ast) = newASTNodeLine(">=", g_last_line);
     }
 #line 1725 "parser.tab.c"
     break;
 
-  case 50: /* soma: MINUS  */
-#line 472 "parser.y"
+  case 45: /* relacional: EQUAL_EQUAL  */
+#line 484 "parser.y"
     {
+      /* Cria nó para operador == */
+      (yyval.ast) = newASTNodeLine("==", g_last_line);
+    }
+#line 1734 "parser.tab.c"
+    break;
+
+  case 46: /* relacional: DIFFERENT  */
+#line 489 "parser.y"
+    {
+      /* Cria nó para operador != */
+      (yyval.ast) = newASTNodeLine("!=", g_last_line);
+    }
+#line 1743 "parser.tab.c"
+    break;
+
+  case 47: /* soma_expressao: soma_expressao soma termo  */
+#line 498 "parser.y"
+    {
+      /* Cria nó para operação de soma ou subtração */
+      AST *node = newASTNodeLine("soma_expressao", g_last_line);
+      addChild(node, (yyvsp[-2].ast)); /* Adiciona a primeira soma_expressao */
+      addChild(node, (yyvsp[-1].ast)); /* Adiciona o operador soma */
+      addChild(node, (yyvsp[0].ast)); /* Adiciona o termo */
+      (yyval.ast) = node;
+    }
+#line 1756 "parser.tab.c"
+    break;
+
+  case 48: /* soma_expressao: termo  */
+#line 507 "parser.y"
+    {
+      /* Passa o termo */
+      (yyval.ast) = (yyvsp[0].ast);
+    }
+#line 1765 "parser.tab.c"
+    break;
+
+  case 49: /* soma: PLUS  */
+#line 516 "parser.y"
+    {
+      /* Cria nó para operador + */
+      (yyval.ast) = newASTNodeLine("+", g_last_line);
+    }
+#line 1774 "parser.tab.c"
+    break;
+
+  case 50: /* soma: MINUS  */
+#line 521 "parser.y"
+    {
+      /* Cria nó para operador - */
       (yyval.ast) = newASTNodeLine("-", g_last_line);
     }
-#line 1733 "parser.tab.c"
+#line 1783 "parser.tab.c"
     break;
 
   case 51: /* termo: termo mult fator  */
-#line 480 "parser.y"
+#line 530 "parser.y"
     {
+      /* Cria nó para operação de multiplicação ou divisão */
       AST *node = newASTNodeLine("termo", g_last_line);
-      addChild(node, (yyvsp[-2].ast));
-      addChild(node, (yyvsp[-1].ast));
-      addChild(node, (yyvsp[0].ast));
+      addChild(node, (yyvsp[-2].ast)); /* Adiciona o primeiro termo */
+      addChild(node, (yyvsp[-1].ast)); /* Adiciona o operador multiplicação */
+      addChild(node, (yyvsp[0].ast)); /* Adiciona o fator */
       (yyval.ast) = node;
     }
-#line 1745 "parser.tab.c"
+#line 1796 "parser.tab.c"
     break;
 
   case 52: /* termo: fator  */
-#line 488 "parser.y"
+#line 539 "parser.y"
     {
+      /* Passa o fator */
       (yyval.ast) = (yyvsp[0].ast);
     }
-#line 1753 "parser.tab.c"
+#line 1805 "parser.tab.c"
     break;
 
   case 53: /* mult: MULT  */
-#line 496 "parser.y"
+#line 548 "parser.y"
     {
+      /* Cria nó para operador * */
       (yyval.ast) = newASTNodeLine("*", g_last_line);
     }
-#line 1761 "parser.tab.c"
+#line 1814 "parser.tab.c"
     break;
 
   case 54: /* mult: DIV  */
-#line 500 "parser.y"
+#line 553 "parser.y"
     {
+      /* Cria nó para operador / */
       (yyval.ast) = newASTNodeLine("/", g_last_line);
     }
-#line 1769 "parser.tab.c"
+#line 1823 "parser.tab.c"
     break;
 
   case 55: /* fator: OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS  */
-#line 508 "parser.y"
+#line 562 "parser.y"
     {
+      /* Cria nó para expressão entre parênteses */
       AST *node = newASTNodeLine("fator(paren)", g_last_line);
-      addChild(node, newASTNodeLine("(", g_last_line));
-      addChild(node, (yyvsp[-1].ast));
-      addChild(node, newASTNodeLine(")", g_last_line));
+      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
+         addChild(node, newASTNodeLine(")", g_last_line)); */
+      addChild(node, (yyvsp[-1].ast)); /* Adiciona a expressão */
       (yyval.ast) = node;
     }
-#line 1781 "parser.tab.c"
+#line 1836 "parser.tab.c"
     break;
 
   case 56: /* fator: var  */
-#line 516 "parser.y"
+#line 571 "parser.y"
     {
+      /* Cria nó para variável */
       AST *node = newASTNodeLine("fator(var)", g_last_line);
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1791 "parser.tab.c"
+#line 1847 "parser.tab.c"
     break;
 
   case 57: /* fator: ativacao  */
-#line 522 "parser.y"
+#line 578 "parser.y"
     {
+      /* Cria nó para ativação de função */
       AST *node = newASTNodeLine("fator(ativ)", g_last_line);
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1801 "parser.tab.c"
+#line 1858 "parser.tab.c"
     break;
 
   case 58: /* fator: NUM  */
-#line 528 "parser.y"
+#line 585 "parser.y"
     {
+      /* Cria nó para número */
       char buf[64];
       sprintf(buf, "NUM:%d", (yyvsp[0].ival));
-      AST *node = newASTNodeLine("fator(NUM)", g_last_line);
-      addChild(node, newASTNodeLine(buf, g_last_line));
+      AST *node = newASTNodeLine(buf, g_last_line);
+      /* Não adiciona filhos, pois é uma folha */
       (yyval.ast) = node;
     }
-#line 1813 "parser.tab.c"
+#line 1871 "parser.tab.c"
     break;
 
   case 59: /* ativacao: ID OPEN_PARENTHESIS args CLOSE_PARENTHESIS  */
-#line 540 "parser.y"
+#line 598 "parser.y"
     {
+      /* Cria nó para ativação de função */
       AST *node = newASTNodeLine("ativacao", g_last_line);
       addChild(node, newASTNodeLine((yyvsp[-3].str), g_last_line));
-      addChild(node, newASTNodeLine("(", g_last_line));
-      addChild(node, (yyvsp[-1].ast));
-      addChild(node, newASTNodeLine(")", g_last_line));
-      free((yyvsp[-3].str));
+      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
+         addChild(node, newASTNodeLine(")", g_last_line)); */
+      addChild(node, (yyvsp[-1].ast)); /* Adiciona os argumentos */
+      free((yyvsp[-3].str)); /* Libera a string do ID */
       (yyval.ast) = node;
     }
-#line 1827 "parser.tab.c"
+#line 1886 "parser.tab.c"
     break;
 
   case 60: /* args: arg_lista  */
-#line 554 "parser.y"
+#line 613 "parser.y"
     {
+      /* Passa a lista de argumentos */
       (yyval.ast) = (yyvsp[0].ast);
     }
-#line 1835 "parser.tab.c"
+#line 1895 "parser.tab.c"
     break;
 
   case 61: /* args: %empty  */
-#line 558 "parser.y"
+#line 618 "parser.y"
     {
+      /* Cria nó indicando que não há argumentos */
       AST *node = newASTNodeLine("args_vazio", g_last_line);
       (yyval.ast) = node;
     }
-#line 1844 "parser.tab.c"
+#line 1905 "parser.tab.c"
     break;
 
   case 62: /* arg_lista: arg_lista COMMA expressao  */
-#line 567 "parser.y"
+#line 628 "parser.y"
     {
+      /* Cria nó para lista de argumentos e adiciona o novo argumento */
       AST *node = newASTNodeLine("arg_lista", g_last_line);
       addChild(node, (yyvsp[-2].ast));
-      addChild(node, newASTNodeLine(",", g_last_line));
+      /* Removido: addChild(node, newASTNodeLine(",", g_last_line)); */
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1856 "parser.tab.c"
+#line 1918 "parser.tab.c"
     break;
 
   case 63: /* arg_lista: expressao  */
-#line 575 "parser.y"
+#line 637 "parser.y"
     {
+      /* Cria nó para lista de argumentos com um único argumento */
       AST *node = newASTNodeLine("arg_lista", g_last_line);
       addChild(node, (yyvsp[0].ast));
       (yyval.ast) = node;
     }
-#line 1866 "parser.tab.c"
+#line 1929 "parser.tab.c"
     break;
 
 
-#line 1870 "parser.tab.c"
+#line 1933 "parser.tab.c"
 
       default: break;
     }
@@ -2059,10 +2122,10 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 582 "parser.y"
+#line 645 "parser.y"
 
 
-/* Erro sintático */
+/* Função para captura de erros sintáticos */
 void yyerror(const char *s) {
     fprintf(stderr, 
       "ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",

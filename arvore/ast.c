@@ -37,23 +37,20 @@ static void printASTRec(AST *node, int level) {
     printIndent(level);
     printf("%s(\n", node->name);
 
-    /* Imprime os filhos, cada um em uma nova linha, indentando +1 */
     for (int i = 0; i < node->numChildren; i++) {
-        /* Chama recursivo com level+1 */
         printASTRec(node->children[i], level + 1);
 
         if (i < node->numChildren - 1) {
-            /* Se não é o último filho, imprime vírgula e \n */
             printf(",\n");
         } else {
             printf("\n");
         }
     }
 
-    /* Fecha o parêntese no mesmo nível do nó */
     printIndent(level);
     printf(")");
 }
+
 
 /* Função pública para imprimir a AST a partir da raiz */
 void printAST(AST *root) {
