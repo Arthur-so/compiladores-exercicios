@@ -4,3 +4,4 @@ main
 arvore/parser.tab.h
 arvore/parser.tab.c
 arvore/compilador
+arvore/testes/*

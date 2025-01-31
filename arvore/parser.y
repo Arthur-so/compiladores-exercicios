@@ -647,7 +647,7 @@ arg_lista:
 /* Função para captura de erros sintáticos */
 void yyerror(const char *s) {
     fprintf(stderr, 
-      "ERRO SINTATICO: \"%s\" [linha: %d]\n",
-      s, g_last_line
+      "ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
+      g_last_lexeme, g_last_line, g_last_col
     );
 }

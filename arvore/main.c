@@ -95,10 +95,7 @@ int main(int argc, char **argv) {
                 printSymTab();
             }
         }
-    } else {
-        printf("Houve erro(s) sintático(s).\n");
-    }
-
+    } 
     destroyLexer(lexer);
     return 0;
 }
