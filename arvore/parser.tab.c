@@ -80,15 +80,22 @@
 int yylex();
 void yyerror(const char *s);
 
-/* Variáveis globais para armazenar o "último token lido" (para mensagens de erro) */
-char g_last_lexeme[64];
-int  g_last_line   = 1;
-int  g_last_col    = 1;
-
-/* Raiz da AST */
+/* Variáveis globais para armazenar a AST */
 AST *g_root = NULL;
 
-#line 92 "parser.tab.c"
+/* Variáveis globais para rastrear o último token lido */
+extern char g_last_lexeme[64];
+extern int  g_last_line;
+extern int  g_last_col;
+
+/* Função para criar novos nós da AST */
+AST* newASTNodeLine(const char *name, int line);
+AST* newASTNodeText(const char *text, int line);
+AST* newASTNodeTextInt(int value, int line);
+void addChild(AST *parent, AST *child);
+
+
+#line 99 "parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -136,8 +143,8 @@ enum yysymbol_kind_t
   YYSYMBOL_DIFFERENT = 17,                 /* DIFFERENT  */
   YYSYMBOL_GREATER = 18,                   /* GREATER  */
   YYSYMBOL_GREATER_EQUAL = 19,             /* GREATER_EQUAL  */
-  YYSYMBOL_MINOR = 20,                     /* MINOR  */
-  YYSYMBOL_MINOR_EQUAL = 21,               /* MINOR_EQUAL  */
+  YYSYMBOL_LESS = 20,                      /* LESS  */
+  YYSYMBOL_LESS_EQUAL = 21,                /* LESS_EQUAL  */
   YYSYMBOL_SEMICOLON = 22,                 /* SEMICOLON  */
   YYSYMBOL_COMMA = 23,                     /* COMMA  */
   YYSYMBOL_OPEN_PARENTHESIS = 24,          /* OPEN_PARENTHESIS  */
@@ -146,36 +153,37 @@ enum yysymbol_kind_t
   YYSYMBOL_CLOSE_SQUARE_BRACKETS = 27,     /* CLOSE_SQUARE_BRACKETS  */
   YYSYMBOL_OPEN_CURLY_BRACKETS = 28,       /* OPEN_CURLY_BRACKETS  */
   YYSYMBOL_CLOSE_CURLY_BRACKETS = 29,      /* CLOSE_CURLY_BRACKETS  */
-  YYSYMBOL_YYACCEPT = 30,                  /* $accept  */
-  YYSYMBOL_programa = 31,                  /* programa  */
-  YYSYMBOL_declaracao_lista = 32,          /* declaracao_lista  */
-  YYSYMBOL_declaracao = 33,                /* declaracao  */
-  YYSYMBOL_var_declaracao = 34,            /* var_declaracao  */
-  YYSYMBOL_tipo_especificador = 35,        /* tipo_especificador  */
-  YYSYMBOL_fun_declaracao = 36,            /* fun_declaracao  */
-  YYSYMBOL_params = 37,                    /* params  */
-  YYSYMBOL_param_lista = 38,               /* param_lista  */
-  YYSYMBOL_param = 39,                     /* param  */
-  YYSYMBOL_composto_decl = 40,             /* composto_decl  */
-  YYSYMBOL_local_declaracoes = 41,         /* local_declaracoes  */
-  YYSYMBOL_statement_lista = 42,           /* statement_lista  */
-  YYSYMBOL_statement = 43,                 /* statement  */
-  YYSYMBOL_expressao_decl = 44,            /* expressao_decl  */
-  YYSYMBOL_selecao_decl = 45,              /* selecao_decl  */
-  YYSYMBOL_iteracao_decl = 46,             /* iteracao_decl  */
-  YYSYMBOL_retorno_decl = 47,              /* retorno_decl  */
-  YYSYMBOL_expressao = 48,                 /* expressao  */
+  YYSYMBOL_IF_ELSE = 30,                   /* IF_ELSE  */
+  YYSYMBOL_YYACCEPT = 31,                  /* $accept  */
+  YYSYMBOL_programa = 32,                  /* programa  */
+  YYSYMBOL_declaracao_lista = 33,          /* declaracao_lista  */
+  YYSYMBOL_declaracao = 34,                /* declaracao  */
+  YYSYMBOL_var_declaracao = 35,            /* var_declaracao  */
+  YYSYMBOL_tipo_especificador = 36,        /* tipo_especificador  */
+  YYSYMBOL_fun_declaracao = 37,            /* fun_declaracao  */
+  YYSYMBOL_params = 38,                    /* params  */
+  YYSYMBOL_param_lista = 39,               /* param_lista  */
+  YYSYMBOL_param = 40,                     /* param  */
+  YYSYMBOL_composto_decl = 41,             /* composto_decl  */
+  YYSYMBOL_local_declaracoes = 42,         /* local_declaracoes  */
+  YYSYMBOL_statement_lista = 43,           /* statement_lista  */
+  YYSYMBOL_statement = 44,                 /* statement  */
+  YYSYMBOL_expressao_decl = 45,            /* expressao_decl  */
+  YYSYMBOL_selecao_decl = 46,              /* selecao_decl  */
+  YYSYMBOL_iteracao_decl = 47,             /* iteracao_decl  */
+  YYSYMBOL_retorno_decl = 48,              /* retorno_decl  */
   YYSYMBOL_var = 49,                       /* var  */
-  YYSYMBOL_simples_expressao = 50,         /* simples_expressao  */
-  YYSYMBOL_relacional = 51,                /* relacional  */
-  YYSYMBOL_soma_expressao = 52,            /* soma_expressao  */
-  YYSYMBOL_soma = 53,                      /* soma  */
-  YYSYMBOL_termo = 54,                     /* termo  */
-  YYSYMBOL_mult = 55,                      /* mult  */
-  YYSYMBOL_fator = 56,                     /* fator  */
-  YYSYMBOL_ativacao = 57,                  /* ativacao  */
-  YYSYMBOL_args = 58,                      /* args  */
-  YYSYMBOL_arg_lista = 59                  /* arg_lista  */
+  YYSYMBOL_expressao = 50,                 /* expressao  */
+  YYSYMBOL_simples_expressao = 51,         /* simples_expressao  */
+  YYSYMBOL_relacional = 52,                /* relacional  */
+  YYSYMBOL_soma_expressao = 53,            /* soma_expressao  */
+  YYSYMBOL_soma = 54,                      /* soma  */
+  YYSYMBOL_termo = 55,                     /* termo  */
+  YYSYMBOL_mult = 56,                      /* mult  */
+  YYSYMBOL_fator = 57,                     /* fator  */
+  YYSYMBOL_ativacao = 58,                  /* ativacao  */
+  YYSYMBOL_args = 59,                      /* args  */
+  YYSYMBOL_arg_lista = 60                  /* arg_lista  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -503,10 +511,10 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  9
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   98
+#define YYLAST   96
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  30
+#define YYNTOKENS  31
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  30
 /* YYNRULES -- Number of rules.  */
@@ -515,7 +523,7 @@ union yyalloc
 #define YYNSTATES  102
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   284
+#define YYMAXUTOK   285
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -557,20 +565,20 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      25,    26,    27,    28,    29
+      25,    26,    27,    28,    29,    30
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    51,    51,    62,    70,    81,    88,    99,   112,   138,
-     144,   154,   173,   178,   188,   197,   208,   218,   234,   248,
-     257,   266,   275,   284,   291,   298,   305,   312,   323,   331,
-     340,   351,   368,   383,   391,   404,   413,   422,   430,   445,
-     454,   463,   468,   473,   478,   483,   488,   497,   506,   515,
-     520,   529,   538,   547,   552,   561,   570,   577,   584,   597,
-     612,   618,   627,   636
+       0,    68,    68,    79,    87,    98,   105,   116,   126,   144,
+     150,   160,   176,   181,   191,   199,   210,   220,   234,   246,
+     255,   264,   273,   282,   289,   296,   303,   310,   321,   328,
+     337,   346,   361,   374,   381,   393,   401,   414,   423,   432,
+     441,   450,   457,   464,   471,   478,   485,   496,   505,   514,
+     520,   530,   539,   548,   554,   564,   571,   578,   585,   598,
+     611,   617,   626,   634
 };
 #endif
 
@@ -588,16 +596,16 @@ static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "ID", "NUM", "IF",
   "ELSE", "INT", "RETURN", "VOID", "WHILE", "PLUS", "MINUS", "MULT", "DIV",
-  "EQUAL", "EQUAL_EQUAL", "DIFFERENT", "GREATER", "GREATER_EQUAL", "MINOR",
-  "MINOR_EQUAL", "SEMICOLON", "COMMA", "OPEN_PARENTHESIS",
+  "EQUAL", "EQUAL_EQUAL", "DIFFERENT", "GREATER", "GREATER_EQUAL", "LESS",
+  "LESS_EQUAL", "SEMICOLON", "COMMA", "OPEN_PARENTHESIS",
   "CLOSE_PARENTHESIS", "OPEN_SQUARE_BRACKETS", "CLOSE_SQUARE_BRACKETS",
-  "OPEN_CURLY_BRACKETS", "CLOSE_CURLY_BRACKETS", "$accept", "programa",
-  "declaracao_lista", "declaracao", "var_declaracao", "tipo_especificador",
-  "fun_declaracao", "params", "param_lista", "param", "composto_decl",
-  "local_declaracoes", "statement_lista", "statement", "expressao_decl",
-  "selecao_decl", "iteracao_decl", "retorno_decl", "expressao", "var",
-  "simples_expressao", "relacional", "soma_expressao", "soma", "termo",
-  "mult", "fator", "ativacao", "args", "arg_lista", YY_NULLPTR
+  "OPEN_CURLY_BRACKETS", "CLOSE_CURLY_BRACKETS", "IF_ELSE", "$accept",
+  "programa", "declaracao_lista", "declaracao", "var_declaracao",
+  "tipo_especificador", "fun_declaracao", "params", "param_lista", "param",
+  "composto_decl", "local_declaracoes", "statement_lista", "statement",
+  "expressao_decl", "selecao_decl", "iteracao_decl", "retorno_decl", "var",
+  "expressao", "simples_expressao", "relacional", "soma_expressao", "soma",
+  "termo", "mult", "fator", "ativacao", "args", "arg_lista", YY_NULLPTR
 };
 
 static const char *
@@ -607,7 +615,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-92)
+#define YYPACT_NINF (-88)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -621,17 +629,17 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      35,   -92,   -92,    24,    35,   -92,   -92,    54,   -92,   -92,
-     -92,   -12,   -92,    36,    64,    14,    56,    45,    46,   -92,
-      47,    49,    43,    35,    50,    51,   -92,   -92,   -92,   -92,
-     -92,    35,   -92,    70,     3,    -5,    22,   -92,    52,    12,
-      53,   -92,    -2,   -92,   -92,   -92,   -92,   -92,   -92,   -92,
-      57,    65,   -92,    44,    38,   -92,   -92,    -2,    -2,    -2,
-     -92,    59,    -2,    58,   -92,    -2,   -92,   -92,   -92,   -92,
-     -92,   -92,   -92,   -92,    -2,    -2,   -92,   -92,    -2,   -92,
-      60,    61,    62,    63,   -92,    66,   -92,   -92,   -92,    55,
-      38,   -92,   -92,    -2,   -92,    25,    25,   -92,    76,   -92,
-      25,   -92
+      59,   -88,   -88,     4,    59,   -88,   -88,     8,   -88,   -88,
+     -88,    14,   -88,    60,    12,    22,    34,    25,    48,   -88,
+      43,    46,    45,    59,    52,    49,   -88,   -88,   -88,   -88,
+     -88,    59,   -88,    72,     2,    -5,    27,   -88,    53,    11,
+      54,   -88,    -2,   -88,   -88,   -88,   -88,   -88,   -88,   -88,
+      64,    58,   -88,    44,    30,   -88,   -88,    -2,    -2,    -2,
+     -88,    61,    -2,    56,    -2,   -88,   -88,   -88,   -88,   -88,
+     -88,   -88,   -88,   -88,    -2,    -2,   -88,   -88,    -2,   -88,
+      57,    62,    63,    66,   -88,    67,   -88,   -88,   -88,    47,
+      30,   -88,   -88,    -2,   -88,    24,    24,   -88,    78,   -88,
+      24,   -88
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -642,22 +650,22 @@ static const yytype_int8 yydefact[] =
        0,     9,    10,     0,     2,     4,     5,     0,     6,     1,
        3,     0,     7,     0,     0,    10,     0,     0,    12,    15,
        0,    16,     0,     0,     0,     0,    20,    11,    14,     8,
-      17,    22,    19,     0,     0,     0,    37,    58,     0,     0,
+      17,    22,    19,     0,     0,     0,    35,    58,     0,     0,
        0,    29,     0,    18,    24,    21,    23,    25,    26,    27,
-       0,    56,    36,    40,    48,    52,    57,    61,     0,     0,
-      33,     0,     0,     0,    28,     0,    49,    50,    45,    46,
+      56,     0,    38,    40,    48,    52,    57,    61,     0,     0,
+      33,     0,     0,     0,     0,    28,    49,    50,    45,    46,
       43,    44,    42,    41,     0,     0,    53,    54,     0,    63,
-       0,    60,     0,     0,    34,     0,    55,    35,    56,    39,
-      47,    51,    59,     0,    38,     0,     0,    62,    30,    32,
+       0,    60,     0,     0,    34,     0,    55,    37,    56,    39,
+      47,    51,    59,     0,    36,     0,     0,    62,    30,    32,
        0,    31
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -92,   -92,   -92,    82,    67,    27,   -92,   -92,   -92,    69,
-      68,   -92,   -92,   -91,   -92,   -92,   -92,   -92,   -39,   -37,
-     -92,   -92,    13,   -92,    18,   -92,    16,   -92,   -92,   -92
+     -88,   -88,   -88,    82,    65,    26,   -88,   -88,   -88,    70,
+      73,   -88,   -88,   -87,   -88,   -88,   -88,   -88,   -33,   -39,
+     -88,   -88,    13,   -88,    19,   -88,    10,   -88,   -88,   -88
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
@@ -673,59 +681,59 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      61,    36,    37,    63,    98,    99,    36,    37,    38,   101,
-      12,    39,    13,    40,    14,    36,    37,    12,    79,    82,
-      83,    14,    42,    85,     9,    41,    87,    42,    36,    37,
-      38,    26,    43,    39,    60,    40,    42,    88,    88,   -13,
-      16,    88,     1,     1,     2,    15,    57,    41,    58,    42,
-      16,    76,    77,    26,    97,    66,    67,    11,    33,    21,
-      68,    69,    70,    71,    72,    73,    66,    67,    20,    23,
-      22,    26,    29,    35,    24,    25,    59,    62,    30,    64,
-      65,    84,   100,    86,    93,    92,    10,    89,    95,    94,
-      27,    96,    28,    90,    91,     0,     0,     0,    32
+      61,    36,    37,    63,     9,    36,    37,    38,    98,    99,
+      39,    11,    40,   101,    36,    37,    20,    12,    79,    82,
+      83,    14,    42,    85,    41,    87,    42,    36,    37,    38,
+      26,    43,    39,    60,    40,    42,    12,    21,    13,    16,
+      14,    88,    88,    76,    77,    88,    41,   -13,    42,    16,
+      22,    57,    26,    58,    97,    66,    67,    33,    66,    67,
+      68,    69,    70,    71,    72,    73,     1,     1,     2,    15,
+      24,    23,    25,    26,    29,    35,    30,    59,    62,    64,
+      65,    86,    92,    84,   100,    93,    10,    89,    91,     0,
+      94,    95,    96,    28,    90,    27,    32
 };
 
 static const yytype_int8 yycheck[] =
 {
-      39,     3,     4,    42,    95,    96,     3,     4,     5,   100,
-      22,     8,    24,    10,    26,     3,     4,    22,    57,    58,
-      59,    26,    24,    62,     0,    22,    65,    24,     3,     4,
-       5,    28,    29,     8,    22,    10,    24,    74,    75,    25,
-      13,    78,     7,     7,     9,     9,    24,    22,    26,    24,
-      23,    13,    14,    28,    93,    11,    12,     3,    31,     3,
-      16,    17,    18,    19,    20,    21,    11,    12,     4,    23,
-      25,    28,    22,     3,    27,    26,    24,    24,    27,    22,
-      15,    22,     6,    25,    23,    25,     4,    74,    25,    27,
-      22,    25,    23,    75,    78,    -1,    -1,    -1,    31
+      39,     3,     4,    42,     0,     3,     4,     5,    95,    96,
+       8,     3,    10,   100,     3,     4,     4,    22,    57,    58,
+      59,    26,    24,    62,    22,    64,    24,     3,     4,     5,
+      28,    29,     8,    22,    10,    24,    22,     3,    24,    13,
+      26,    74,    75,    13,    14,    78,    22,    25,    24,    23,
+      25,    24,    28,    26,    93,    11,    12,    31,    11,    12,
+      16,    17,    18,    19,    20,    21,     7,     7,     9,     9,
+      27,    23,    26,    28,    22,     3,    27,    24,    24,    15,
+      22,    25,    25,    22,     6,    23,     4,    74,    78,    -1,
+      27,    25,    25,    23,    75,    22,    31
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     7,     9,    31,    32,    33,    34,    35,    36,     0,
-      33,     3,    22,    24,    26,     9,    35,    37,    38,    39,
-       4,     3,    25,    23,    27,    26,    28,    40,    39,    22,
-      27,    41,    34,    35,    42,     3,     3,     4,     5,     8,
-      10,    22,    24,    29,    40,    43,    44,    45,    46,    47,
-      48,    49,    50,    52,    54,    56,    57,    24,    26,    24,
-      22,    48,    24,    48,    22,    15,    11,    12,    16,    17,
-      18,    19,    20,    21,    51,    53,    13,    14,    55,    48,
-      58,    59,    48,    48,    22,    48,    25,    48,    49,    52,
-      54,    56,    25,    23,    27,    25,    25,    48,    43,    43,
-       6,    43
+       0,     7,     9,    32,    33,    34,    35,    36,    37,     0,
+      34,     3,    22,    24,    26,     9,    36,    38,    39,    40,
+       4,     3,    25,    23,    27,    26,    28,    41,    40,    22,
+      27,    42,    35,    36,    43,     3,     3,     4,     5,     8,
+      10,    22,    24,    29,    41,    44,    45,    46,    47,    48,
+      49,    50,    51,    53,    55,    57,    58,    24,    26,    24,
+      22,    50,    24,    50,    15,    22,    11,    12,    16,    17,
+      18,    19,    20,    21,    52,    54,    13,    14,    56,    50,
+      59,    60,    50,    50,    22,    50,    25,    50,    49,    53,
+      55,    57,    25,    23,    27,    25,    25,    50,    44,    44,
+       6,    44
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    30,    31,    32,    32,    33,    33,    34,    34,    35,
-      35,    36,    37,    37,    38,    38,    39,    39,    40,    41,
-      41,    42,    42,    43,    43,    43,    43,    43,    44,    44,
-      45,    45,    46,    47,    47,    48,    48,    49,    49,    50,
-      50,    51,    51,    51,    51,    51,    51,    52,    52,    53,
-      53,    54,    54,    55,    55,    56,    56,    56,    56,    57,
-      58,    58,    59,    59
+       0,    31,    32,    33,    33,    34,    34,    35,    35,    36,
+      36,    37,    38,    38,    39,    39,    40,    40,    41,    42,
+      42,    43,    43,    44,    44,    44,    44,    44,    45,    45,
+      46,    46,    47,    48,    48,    49,    49,    50,    50,    51,
+      51,    52,    52,    52,    52,    52,    52,    53,    53,    54,
+      54,    55,    55,    56,    56,    57,    57,    57,    57,    58,
+      59,    59,    60,    60
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
@@ -734,7 +742,7 @@ static const yytype_int8 yyr2[] =
        0,     2,     1,     2,     1,     1,     1,     3,     6,     1,
        1,     6,     1,     1,     3,     1,     2,     4,     4,     2,
        0,     2,     0,     1,     1,     1,     1,     1,     2,     1,
-       5,     7,     5,     2,     3,     3,     1,     1,     4,     3,
+       5,     7,     5,     2,     3,     1,     4,     3,     1,     3,
        1,     1,     1,     1,     1,     1,     1,     3,     1,     1,
        1,     3,     1,     1,     1,     3,     1,     1,     1,     4,
        1,     0,     3,     1
@@ -1201,18 +1209,18 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* programa: declaracao_lista  */
-#line 52 "parser.y"
+#line 69 "parser.y"
     {
         /* Cria o nó raiz da AST */
         AST *node = newASTNodeLine("programa", g_last_line);
         addChild(node, (yyvsp[0].ast));
         g_root = node;
     }
-#line 1212 "parser.tab.c"
+#line 1220 "parser.tab.c"
     break;
 
   case 3: /* declaracao_lista: declaracao_lista declaracao  */
-#line 63 "parser.y"
+#line 80 "parser.y"
       {
         /* Cria nó para lista de declarações e adiciona filhos */
         AST *node = newASTNodeLine("declaracao_lista", g_last_line);
@@ -1220,716 +1228,697 @@ yyreduce:
         addChild(node, (yyvsp[0].ast));
         (yyval.ast) = node;
       }
-#line 1224 "parser.tab.c"
+#line 1232 "parser.tab.c"
     break;
 
   case 4: /* declaracao_lista: declaracao  */
-#line 71 "parser.y"
+#line 88 "parser.y"
       {
         /* Cria nó para lista de declarações com uma única declaração */
         AST *node = newASTNodeLine("declaracao_lista", g_last_line);
         addChild(node, (yyvsp[0].ast));
         (yyval.ast) = node;
       }
-#line 1235 "parser.tab.c"
+#line 1243 "parser.tab.c"
     break;
 
   case 5: /* declaracao: var_declaracao  */
-#line 82 "parser.y"
-    {
-      /* Cria nó para declaração de variável */
-      AST *node = newASTNodeLine("declaracao(var)", g_last_line);
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1246 "parser.tab.c"
+#line 99 "parser.y"
+      {
+        /* Cria nó para declaração de variável */
+        AST *node = newASTNodeLine("declaracao_var", g_last_line);
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1254 "parser.tab.c"
     break;
 
   case 6: /* declaracao: fun_declaracao  */
-#line 89 "parser.y"
-    {
-      /* Cria nó para declaração de função */
-      AST *node = newASTNodeLine("declaracao(fun)", g_last_line);
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1257 "parser.tab.c"
+#line 106 "parser.y"
+      {
+        /* Cria nó para declaração de função */
+        AST *node = newASTNodeLine("declaracao_fun", g_last_line);
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1265 "parser.tab.c"
     break;
 
   case 7: /* var_declaracao: tipo_especificador ID SEMICOLON  */
-#line 100 "parser.y"
-    {
-      /* Cria nó para declaração de variável simples */
-      AST *node = newASTNodeLine("var_declaracao", g_last_line);
-      addChild(node, (yyvsp[-2].ast));
-
-      AST *idNode = newASTNodeLine((yyvsp[-1].str), g_last_line);
-      addChild(node, idNode);
-
-      /* Removido: addChild(node, newASTNodeLine(";", g_last_line)); */
-      free((yyvsp[-1].str)); /* Libera a string do ID */
-      (yyval.ast) = node;
-    }
-#line 1274 "parser.tab.c"
+#line 117 "parser.y"
+      {
+        /* Cria nó para declaração de variável simples */
+        AST *node = newASTNodeLine("var_declaracao", g_last_line);
+        addChild(node, (yyvsp[-2].ast)); /* tipo_especificador */
+        AST *idNode = newASTNodeText((yyvsp[-1].str), g_last_line); /* Nome do ID diretamente */
+        addChild(node, idNode);
+        free((yyvsp[-1].str)); /* Libera a string do ID */
+        (yyval.ast) = node;
+      }
+#line 1279 "parser.tab.c"
     break;
 
   case 8: /* var_declaracao: tipo_especificador ID OPEN_SQUARE_BRACKETS NUM CLOSE_SQUARE_BRACKETS SEMICOLON  */
-#line 113 "parser.y"
-    {
-      /* Cria nó para declaração de vetor */
-      AST *node = newASTNodeLine("var_declaracao_array", g_last_line);
-      addChild(node, (yyvsp[-5].ast));
-
-      AST *idNode = newASTNodeLine((yyvsp[-4].str), g_last_line);
-      addChild(node, idNode);
-
-      /* Removidos: addChild(node, newASTNodeLine("[", g_last_line));
-         addChild(node, newASTNodeLine("]", g_last_line));
-         addChild(node, newASTNodeLine(";", g_last_line)); */
-
-      /* Adiciona o número do tamanho do vetor */
-      char buf[64];
-      sprintf(buf, "NUM:%d", (yyvsp[-2].ival)); 
-      AST *numNode = newASTNodeLine(buf, g_last_line);
-      addChild(node, numNode);
-
-      free((yyvsp[-4].str)); /* Libera a string do ID */
-      (yyval.ast) = node;
-    }
-#line 1300 "parser.tab.c"
+#line 127 "parser.y"
+      {
+        /* Cria nó para declaração de vetor */
+        AST *node = newASTNodeLine("var_declaracao_array", g_last_line);
+        addChild(node, (yyvsp[-5].ast)); /* tipo_especificador */
+        AST *idNode = newASTNodeText((yyvsp[-4].str), g_last_line); /* Nome do ID diretamente */
+        addChild(node, idNode);
+        free((yyvsp[-4].str)); /* Libera a string do ID */
+        
+        /* Adiciona o número do tamanho do vetor */
+        AST *numNode = newASTNodeTextInt((yyvsp[-2].ival), g_last_line);
+        addChild(node, numNode);
+        (yyval.ast) = node;
+      }
+#line 1297 "parser.tab.c"
     break;
 
   case 9: /* tipo_especificador: INT  */
-#line 139 "parser.y"
-    {
-      /* Cria nó para tipo INT */
-      AST *node = newASTNodeLine("INT", g_last_line);
-      (yyval.ast) = node;
-    }
-#line 1310 "parser.tab.c"
+#line 145 "parser.y"
+      {
+        /* Cria nó para tipo INT */
+        AST *node = newASTNodeLine("INT", g_last_line);
+        (yyval.ast) = node;
+      }
+#line 1307 "parser.tab.c"
     break;
 
   case 10: /* tipo_especificador: VOID  */
-#line 145 "parser.y"
-    {
-      /* Cria nó para tipo VOID */
-      AST *node = newASTNodeLine("VOID", g_last_line);
-      (yyval.ast) = node;
-    }
-#line 1320 "parser.tab.c"
+#line 151 "parser.y"
+      {
+        /* Cria nó para tipo VOID */
+        AST *node = newASTNodeLine("VOID", g_last_line);
+        (yyval.ast) = node;
+      }
+#line 1317 "parser.tab.c"
     break;
 
   case 11: /* fun_declaracao: tipo_especificador ID OPEN_PARENTHESIS params CLOSE_PARENTHESIS composto_decl  */
-#line 155 "parser.y"
-    {
-      /* Cria nó para declaração de função */
-      AST *node = newASTNodeLine("fun_declaracao", g_last_line);
-      addChild(node, (yyvsp[-5].ast));
-      addChild(node, newASTNodeLine((yyvsp[-4].str), g_last_line));
-
-      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
-         addChild(node, newASTNodeLine(")", g_last_line)); */
-
-      addChild(node, (yyvsp[-2].ast)); /* Adiciona parâmetros */
-      addChild(node, (yyvsp[0].ast)); /* Adiciona corpo da função */
-      free((yyvsp[-4].str)); /* Libera a string do ID */
-      (yyval.ast) = node;
-    }
-#line 1339 "parser.tab.c"
+#line 161 "parser.y"
+      {
+        /* Cria nó para declaração de função */
+        AST *node = newASTNodeLine("fun_declaracao", g_last_line);
+        addChild(node, (yyvsp[-5].ast)); /* tipo_especificador */
+        AST *idNode = newASTNodeText((yyvsp[-4].str), g_last_line); /* Nome do ID diretamente */
+        addChild(node, idNode);
+        free((yyvsp[-4].str)); /* Libera a string do ID */
+        addChild(node, (yyvsp[-2].ast)); /* params */
+        addChild(node, (yyvsp[0].ast)); /* corpo da função */
+        (yyval.ast) = node;
+      }
+#line 1333 "parser.tab.c"
     break;
 
   case 12: /* params: param_lista  */
-#line 174 "parser.y"
-    {
-      /* Passa a lista de parâmetros */
-      (yyval.ast) = (yyvsp[0].ast);
-    }
-#line 1348 "parser.tab.c"
+#line 177 "parser.y"
+      {
+        /* Passa a lista de parâmetros */
+        (yyval.ast) = (yyvsp[0].ast);
+      }
+#line 1342 "parser.tab.c"
     break;
 
   case 13: /* params: VOID  */
-#line 179 "parser.y"
-    {
-      /* Cria nó indicando que não há parâmetros */
-      AST *node = newASTNodeLine("params_VOID", g_last_line);
-      (yyval.ast) = node;
-    }
-#line 1358 "parser.tab.c"
+#line 182 "parser.y"
+      {
+        /* Cria nó indicando que não há parâmetros */
+        AST *node = newASTNodeLine("params_VOID", g_last_line);
+        (yyval.ast) = node;
+      }
+#line 1352 "parser.tab.c"
     break;
 
   case 14: /* param_lista: param_lista COMMA param  */
-#line 189 "parser.y"
-    {
-      /* Cria nó para lista de parâmetros e adiciona o novo parâmetro */
-      AST *node = newASTNodeLine("param_lista", g_last_line);
-      addChild(node, (yyvsp[-2].ast));
-      /* Removido: addChild(node, newASTNodeLine(",", g_last_line)); */
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1371 "parser.tab.c"
+#line 192 "parser.y"
+      {
+        /* Cria nó para lista de parâmetros e adiciona o novo parâmetro */
+        AST *node = newASTNodeLine("param_lista", g_last_line);
+        addChild(node, (yyvsp[-2].ast));
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1364 "parser.tab.c"
     break;
 
   case 15: /* param_lista: param  */
-#line 198 "parser.y"
-    {
-      /* Cria nó para lista de parâmetros com um único parâmetro */
-      AST *node = newASTNodeLine("param_lista", g_last_line);
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1382 "parser.tab.c"
+#line 200 "parser.y"
+      {
+        /* Cria nó para lista de parâmetros com um único parâmetro */
+        AST *node = newASTNodeLine("param_lista", g_last_line);
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1375 "parser.tab.c"
     break;
 
   case 16: /* param: tipo_especificador ID  */
-#line 209 "parser.y"
-    {
-      /* Cria nó para parâmetro simples */
-      AST *node = newASTNodeLine("param", g_last_line);
-      addChild(node, (yyvsp[-1].ast));
-      AST *idNode = newASTNodeLine((yyvsp[0].str), g_last_line);
-      addChild(node, idNode);
-      free((yyvsp[0].str)); /* Libera a string do ID */
-      (yyval.ast) = node;
-    }
-#line 1396 "parser.tab.c"
+#line 211 "parser.y"
+      {
+        /* Cria nó para parâmetro simples */
+        AST *node = newASTNodeLine("param", g_last_line);
+        addChild(node, (yyvsp[-1].ast)); /* tipo_especificador */
+        AST *idNode = newASTNodeText((yyvsp[0].str), g_last_line); /* Nome do ID diretamente */
+        addChild(node, idNode);
+        free((yyvsp[0].str)); /* Libera a string do ID */
+        (yyval.ast) = node;
+      }
+#line 1389 "parser.tab.c"
     break;
 
   case 17: /* param: tipo_especificador ID OPEN_SQUARE_BRACKETS CLOSE_SQUARE_BRACKETS  */
-#line 219 "parser.y"
-    {
-      /* Cria nó para parâmetro que é um vetor */
-      AST *node = newASTNodeLine("param_array", g_last_line);
-      addChild(node, (yyvsp[-3].ast));
-      AST *idNode = newASTNodeLine((yyvsp[-2].str), g_last_line);
-      addChild(node, idNode);
-      /* Removidos: addChild(node, newASTNodeLine("[", g_last_line));
-         addChild(node, newASTNodeLine("]", g_last_line)); */
-      free((yyvsp[-2].str)); /* Libera a string do ID */
-      (yyval.ast) = node;
-    }
-#line 1412 "parser.tab.c"
+#line 221 "parser.y"
+      {
+        /* Cria nó para parâmetro que é um vetor */
+        AST *node = newASTNodeLine("param_array", g_last_line);
+        addChild(node, (yyvsp[-3].ast)); /* tipo_especificador */
+        AST *idNode = newASTNodeText((yyvsp[-2].str), g_last_line); /* Nome do ID diretamente */
+        addChild(node, idNode);
+        free((yyvsp[-2].str)); /* Libera a string do ID */
+        (yyval.ast) = node;
+      }
+#line 1403 "parser.tab.c"
     break;
 
   case 18: /* composto_decl: OPEN_CURLY_BRACKETS local_declaracoes statement_lista CLOSE_CURLY_BRACKETS  */
 #line 235 "parser.y"
-    {
-      /* Cria nó para corpo composto da função */
-      AST *node = newASTNodeLine("composto_decl", g_last_line);
-      /* Removidos: addChild(node, newASTNodeLine("{", g_last_line));
-         addChild(node, newASTNodeLine("}", g_last_line)); */
-      addChild(node, (yyvsp[-2].ast)); /* Adiciona declarações locais */
-      addChild(node, (yyvsp[-1].ast)); /* Adiciona lista de statements */
-      (yyval.ast) = node;
-    }
-#line 1426 "parser.tab.c"
+      {
+        /* Cria nó para corpo composto da função */
+        AST *node = newASTNodeLine("composto_decl", g_last_line);
+        addChild(node, (yyvsp[-2].ast)); /* local_declaracoes */
+        addChild(node, (yyvsp[-1].ast)); /* statement_lista */
+        (yyval.ast) = node;
+      }
+#line 1415 "parser.tab.c"
     break;
 
   case 19: /* local_declaracoes: local_declaracoes var_declaracao  */
-#line 249 "parser.y"
-    {
-      /* Cria nó para declarações locais e adiciona a nova declaração */
-      AST *node = newASTNodeLine("local_declaracoes", g_last_line);
-      addChild(node, (yyvsp[-1].ast));
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1438 "parser.tab.c"
+#line 247 "parser.y"
+      {
+        /* Cria nó para declarações locais e adiciona a nova declaração */
+        AST *node = newASTNodeLine("local_declaracoes", g_last_line);
+        addChild(node, (yyvsp[-1].ast));
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1427 "parser.tab.c"
     break;
 
   case 20: /* local_declaracoes: %empty  */
-#line 257 "parser.y"
-    {
-      /* Cria nó indicando que não há declarações locais */
-      AST *node = newASTNodeLine("local_declaracoes_vazio", g_last_line);
-      (yyval.ast) = node;
-    }
-#line 1448 "parser.tab.c"
+#line 255 "parser.y"
+      {
+        /* Cria nó indicando que não há declarações locais */
+        AST *node = newASTNodeLine("local_declaracoes_vazio", g_last_line);
+        (yyval.ast) = node;
+      }
+#line 1437 "parser.tab.c"
     break;
 
   case 21: /* statement_lista: statement_lista statement  */
-#line 267 "parser.y"
-    {
-      /* Cria nó para lista de statements e adiciona o novo statement */
-      AST *node = newASTNodeLine("statement_lista", g_last_line);
-      addChild(node, (yyvsp[-1].ast));
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1460 "parser.tab.c"
+#line 265 "parser.y"
+      {
+        /* Cria nó para lista de statements e adiciona o novo statement */
+        AST *node = newASTNodeLine("statement_lista", g_last_line);
+        addChild(node, (yyvsp[-1].ast));
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1449 "parser.tab.c"
     break;
 
   case 22: /* statement_lista: %empty  */
-#line 275 "parser.y"
-    {
-      /* Cria nó indicando que não há statements */
-      AST *node = newASTNodeLine("statement_lista_vazio", g_last_line);
-      (yyval.ast) = node;
-    }
-#line 1470 "parser.tab.c"
+#line 273 "parser.y"
+      {
+        /* Cria nó indicando que não há statements */
+        AST *node = newASTNodeLine("statement_lista_vazio", g_last_line);
+        (yyval.ast) = node;
+      }
+#line 1459 "parser.tab.c"
     break;
 
   case 23: /* statement: expressao_decl  */
-#line 285 "parser.y"
-    {
-      /* Cria nó para statement de expressão */
-      AST *node = newASTNodeLine("statement(expr)", g_last_line);
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1481 "parser.tab.c"
+#line 283 "parser.y"
+      {
+        /* Cria nó para statement de expressão */
+        AST *node = newASTNodeLine("statement_expr", g_last_line);
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1470 "parser.tab.c"
     break;
 
   case 24: /* statement: composto_decl  */
-#line 292 "parser.y"
-    {
-      /* Cria nó para statement composto */
-      AST *node = newASTNodeLine("statement(composto)", g_last_line);
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1492 "parser.tab.c"
+#line 290 "parser.y"
+      {
+        /* Cria nó para statement composto */
+        AST *node = newASTNodeLine("statement_composto", g_last_line);
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1481 "parser.tab.c"
     break;
 
   case 25: /* statement: selecao_decl  */
-#line 299 "parser.y"
-    {
-      /* Cria nó para statement de seleção */
-      AST *node = newASTNodeLine("statement(selecao)", g_last_line);
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1503 "parser.tab.c"
+#line 297 "parser.y"
+      {
+        /* Cria nó para statement de seleção */
+        AST *node = newASTNodeLine("statement_selecao", g_last_line);
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1492 "parser.tab.c"
     break;
 
   case 26: /* statement: iteracao_decl  */
-#line 306 "parser.y"
-    {
-      /* Cria nó para statement de iteração */
-      AST *node = newASTNodeLine("statement(iteracao)", g_last_line);
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1514 "parser.tab.c"
+#line 304 "parser.y"
+      {
+        /* Cria nó para statement de iteração */
+        AST *node = newASTNodeLine("statement_iteracao", g_last_line);
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1503 "parser.tab.c"
     break;
 
   case 27: /* statement: retorno_decl  */
-#line 313 "parser.y"
-    {
-      /* Cria nó para statement de retorno */
-      AST *node = newASTNodeLine("statement(retorno)", g_last_line);
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1525 "parser.tab.c"
+#line 311 "parser.y"
+      {
+        /* Cria nó para statement de retorno */
+        AST *node = newASTNodeLine("statement_retorno", g_last_line);
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1514 "parser.tab.c"
     break;
 
   case 28: /* expressao_decl: expressao SEMICOLON  */
-#line 324 "parser.y"
-    {
-      /* Cria nó para declaração de expressão */
-      AST *node = newASTNodeLine("expressao_decl", g_last_line);
-      addChild(node, (yyvsp[-1].ast));
-      /* Removido: addChild(node, newASTNodeLine(";", g_last_line)); */
-      (yyval.ast) = node;
-    }
-#line 1537 "parser.tab.c"
+#line 322 "parser.y"
+      {
+        /* Cria nó para declaração de expressão */
+        AST *node = newASTNodeLine("expressao_decl", g_last_line);
+        addChild(node, (yyvsp[-1].ast));
+        (yyval.ast) = node;
+      }
+#line 1525 "parser.tab.c"
     break;
 
   case 29: /* expressao_decl: SEMICOLON  */
-#line 332 "parser.y"
-    {
-      /* Representa uma declaração de expressão vazia; retorna NULL para evitar nós desnecessários */
-      (yyval.ast) = NULL;
-    }
-#line 1546 "parser.tab.c"
+#line 329 "parser.y"
+      {
+        /* Representa uma declaração de expressão vazia; retorna NULL para evitar nós desnecessários */
+        (yyval.ast) = NULL;
+      }
+#line 1534 "parser.tab.c"
     break;
 
   case 30: /* selecao_decl: IF OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement  */
-#line 341 "parser.y"
-    {
-      /* Cria nó para seleção "if" sem "(", ")" */
-      AST *node = newASTNodeLine("selecao_if", g_last_line);
-      addChild(node, newASTNodeLine("IF", g_last_line));
-      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
-         addChild(node, newASTNodeLine(")", g_last_line)); */
-      addChild(node, (yyvsp[-2].ast)); /* Adiciona a expressão */
-      addChild(node, (yyvsp[0].ast)); /* Adiciona o statement */
-      (yyval.ast) = node;
-    }
-#line 1561 "parser.tab.c"
+#line 338 "parser.y"
+      {
+        /* Cria nó para seleção "if" sem "else" */
+        AST *node = newASTNodeLine("selecao_if", g_last_line);
+        addChild(node, newASTNodeText("IF", g_last_line));
+        addChild(node, (yyvsp[-2].ast)); /* expressão */
+        addChild(node, (yyvsp[0].ast)); /* statement */
+        (yyval.ast) = node;
+      }
+#line 1547 "parser.tab.c"
     break;
 
   case 31: /* selecao_decl: IF OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement ELSE statement  */
-#line 352 "parser.y"
-    {
-      /* Cria nó para seleção "if-else" sem "(", ")" */
-      AST *node = newASTNodeLine("selecao_if_else", g_last_line);
-      addChild(node, newASTNodeLine("IF", g_last_line));
-      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
-         addChild(node, newASTNodeLine(")", g_last_line)); */
-      addChild(node, (yyvsp[-4].ast)); /* Adiciona a expressão */
-      addChild(node, (yyvsp[-2].ast)); /* Adiciona o statement do if */
-      addChild(node, newASTNodeLine("ELSE", g_last_line));
-      addChild(node, (yyvsp[0].ast)); /* Adiciona o statement do else */
-      (yyval.ast) = node;
-    }
-#line 1578 "parser.tab.c"
+#line 347 "parser.y"
+      {
+        /* Cria nó para seleção "if-else" */
+        AST *node = newASTNodeLine("selecao_if_else", g_last_line);
+        addChild(node, newASTNodeText("IF", g_last_line));
+        addChild(node, (yyvsp[-4].ast)); /* expressão */
+        addChild(node, (yyvsp[-2].ast)); /* statement do if */
+        addChild(node, newASTNodeText("ELSE", g_last_line));
+        addChild(node, (yyvsp[0].ast)); /* statement do else */
+        (yyval.ast) = node;
+      }
+#line 1562 "parser.tab.c"
     break;
 
   case 32: /* iteracao_decl: WHILE OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement  */
-#line 369 "parser.y"
-    {
-      /* Cria nó para iteração "while" sem "(", ")" */
-      AST *node = newASTNodeLine("iteracao_while", g_last_line);
-      addChild(node, newASTNodeLine("WHILE", g_last_line));
-      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
-         addChild(node, newASTNodeLine(")", g_last_line)); */
-      addChild(node, (yyvsp[-2].ast)); /* Adiciona a expressão */
-      addChild(node, (yyvsp[0].ast)); /* Adiciona o statement */
-      (yyval.ast) = node;
-    }
-#line 1593 "parser.tab.c"
+#line 362 "parser.y"
+      {
+        /* Cria nó para iteração "while" */
+        AST *node = newASTNodeLine("iteracao_while", g_last_line);
+        addChild(node, newASTNodeText("WHILE", g_last_line));
+        addChild(node, (yyvsp[-2].ast)); /* expressão */
+        addChild(node, (yyvsp[0].ast)); /* statement */
+        (yyval.ast) = node;
+      }
+#line 1575 "parser.tab.c"
     break;
 
   case 33: /* retorno_decl: RETURN SEMICOLON  */
-#line 384 "parser.y"
-    {
-      /* Cria nó para retorno vazio */
-      AST *node = newASTNodeLine("retorno_decl", g_last_line);
-      addChild(node, newASTNodeLine("RETURN", g_last_line));
-      /* Removido: addChild(node, newASTNodeLine(";", g_last_line)); */
-      (yyval.ast) = node;
-    }
-#line 1605 "parser.tab.c"
+#line 375 "parser.y"
+      {
+        /* Cria nó para retorno vazio */
+        AST *node = newASTNodeLine("retorno_decl", g_last_line);
+        addChild(node, newASTNodeText("RETURN", g_last_line));
+        (yyval.ast) = node;
+      }
+#line 1586 "parser.tab.c"
     break;
 
   case 34: /* retorno_decl: RETURN expressao SEMICOLON  */
-#line 392 "parser.y"
-    {
-      /* Cria nó para retorno com expressão */
-      AST *node = newASTNodeLine("retorno_decl", g_last_line);
-      addChild(node, newASTNodeLine("RETURN", g_last_line));
-      addChild(node, (yyvsp[-1].ast));
-      /* Removido: addChild(node, newASTNodeLine(";", g_last_line)); */
-      (yyval.ast) = node;
-    }
-#line 1618 "parser.tab.c"
+#line 382 "parser.y"
+      {
+        /* Cria nó para retorno com expressão */
+        AST *node = newASTNodeLine("retorno_decl", g_last_line);
+        addChild(node, newASTNodeText("RETURN", g_last_line));
+        addChild(node, (yyvsp[-1].ast)); /* expressão */
+        (yyval.ast) = node;
+      }
+#line 1598 "parser.tab.c"
     break;
 
-  case 35: /* expressao: var EQUAL expressao  */
-#line 405 "parser.y"
-    {
-      /* Cria nó para atribuição */
-      AST *node = newASTNodeLine("expressao_atribuicao", g_last_line);
-      addChild(node, (yyvsp[-2].ast)); /* Adiciona a variável */
-      addChild(node, newASTNodeLine("=", g_last_line));
-      addChild(node, (yyvsp[0].ast)); /* Adiciona a expressão */
-      (yyval.ast) = node;
-    }
-#line 1631 "parser.tab.c"
+  case 35: /* var: ID  */
+#line 394 "parser.y"
+      {
+        /* Cria nó para variável simples com o nome do ID diretamente */
+        AST *node = newASTNodeLine("var", g_last_line);
+        addChild(node, newASTNodeText((yyvsp[0].str), g_last_line));
+        free((yyvsp[0].str)); /* Libera a string do ID */
+        (yyval.ast) = node;
+      }
+#line 1610 "parser.tab.c"
     break;
 
-  case 36: /* expressao: simples_expressao  */
-#line 414 "parser.y"
-    {
-      /* Passa a expressão simples */
-      (yyval.ast) = (yyvsp[0].ast);
-    }
-#line 1640 "parser.tab.c"
+  case 36: /* var: ID OPEN_SQUARE_BRACKETS expressao CLOSE_SQUARE_BRACKETS  */
+#line 402 "parser.y"
+      {
+        /* Cria nó para variável com índice com o nome do ID diretamente */
+        AST *node = newASTNodeLine("var_array", g_last_line);
+        addChild(node, newASTNodeText((yyvsp[-3].str), g_last_line));
+        addChild(node, (yyvsp[-1].ast)); /* Adiciona a expressão de índice */
+        free((yyvsp[-3].str)); /* Libera a string do ID */
+        (yyval.ast) = node;
+      }
+#line 1623 "parser.tab.c"
     break;
 
-  case 37: /* var: ID  */
-#line 423 "parser.y"
-    {
-      /* Cria nó para variável simples */
-      AST *node = newASTNodeLine("var", g_last_line);
-      addChild(node, newASTNodeLine((yyvsp[0].str), g_last_line));
-      free((yyvsp[0].str)); /* Libera a string do ID */
-      (yyval.ast) = node;
-    }
-#line 1652 "parser.tab.c"
+  case 37: /* expressao: var EQUAL expressao  */
+#line 415 "parser.y"
+      {
+        /* Cria nó para atribuição */
+        AST *node = newASTNodeLine("expressao_atribuicao", g_last_line);
+        addChild(node, (yyvsp[-2].ast)); /* var */
+        addChild(node, newASTNodeText("=", g_last_line));
+        addChild(node, (yyvsp[0].ast)); /* expressão */
+        (yyval.ast) = node;
+      }
+#line 1636 "parser.tab.c"
     break;
 
-  case 38: /* var: ID OPEN_SQUARE_BRACKETS expressao CLOSE_SQUARE_BRACKETS  */
-#line 431 "parser.y"
-    {
-      /* Cria nó para variável com índice */
-      AST *node = newASTNodeLine("var_array", g_last_line);
-      addChild(node, newASTNodeLine((yyvsp[-3].str), g_last_line));
-      /* Removidos: addChild(node, newASTNodeLine("[", g_last_line));
-         addChild(node, newASTNodeLine("]", g_last_line)); */
-      addChild(node, (yyvsp[-1].ast)); /* Adiciona a expressão de índice */
-      free((yyvsp[-3].str)); /* Libera a string do ID */
-      (yyval.ast) = node;
-    }
-#line 1667 "parser.tab.c"
+  case 38: /* expressao: simples_expressao  */
+#line 424 "parser.y"
+      {
+        /* Passa a expressão simples */
+        (yyval.ast) = (yyvsp[0].ast);
+      }
+#line 1645 "parser.tab.c"
     break;
 
   case 39: /* simples_expressao: soma_expressao relacional soma_expressao  */
-#line 446 "parser.y"
-    {
-      /* Cria nó para expressão relacional */
-      AST *node = newASTNodeLine("simples_expressao", g_last_line);
-      addChild(node, (yyvsp[-2].ast)); /* Adiciona a primeira soma_expressao */
-      addChild(node, (yyvsp[-1].ast)); /* Adiciona o operador relacional */
-      addChild(node, (yyvsp[0].ast)); /* Adiciona a segunda soma_expressao */
-      (yyval.ast) = node;
-    }
-#line 1680 "parser.tab.c"
+#line 433 "parser.y"
+      {
+        /* Cria nó para expressão relacional */
+        AST *node = newASTNodeLine("simples_expressao", g_last_line);
+        addChild(node, (yyvsp[-2].ast)); /* primeira soma_expressao */
+        addChild(node, (yyvsp[-1].ast)); /* operador relacional */
+        addChild(node, (yyvsp[0].ast)); /* segunda soma_expressao */
+        (yyval.ast) = node;
+      }
+#line 1658 "parser.tab.c"
     break;
 
   case 40: /* simples_expressao: soma_expressao  */
-#line 455 "parser.y"
-    {
-      /* Passa a soma_expressao */
-      (yyval.ast) = (yyvsp[0].ast);
-    }
+#line 442 "parser.y"
+      {
+        /* Passa a soma_expressao */
+        (yyval.ast) = (yyvsp[0].ast);
+      }
+#line 1667 "parser.tab.c"
+    break;
+
+  case 41: /* relacional: LESS_EQUAL  */
+#line 451 "parser.y"
+      {
+        /* Cria nó para operador <= */
+        AST *node = newASTNodeLine("relacional", g_last_line);
+        addChild(node, newASTNodeText("<=", g_last_line));
+        (yyval.ast) = node;
+      }
+#line 1678 "parser.tab.c"
+    break;
+
+  case 42: /* relacional: LESS  */
+#line 458 "parser.y"
+      {
+        /* Cria nó para operador < */
+        AST *node = newASTNodeLine("relacional", g_last_line);
+        addChild(node, newASTNodeText("<", g_last_line));
+        (yyval.ast) = node;
+      }
 #line 1689 "parser.tab.c"
     break;
 
-  case 41: /* relacional: MINOR_EQUAL  */
-#line 464 "parser.y"
-    {
-      /* Cria nó para operador <= */
-      (yyval.ast) = newASTNodeLine("<=", g_last_line);
-    }
-#line 1698 "parser.tab.c"
-    break;
-
-  case 42: /* relacional: MINOR  */
-#line 469 "parser.y"
-    {
-      /* Cria nó para operador < */
-      (yyval.ast) = newASTNodeLine("<", g_last_line);
-    }
-#line 1707 "parser.tab.c"
-    break;
-
   case 43: /* relacional: GREATER  */
-#line 474 "parser.y"
-    {
-      /* Cria nó para operador > */
-      (yyval.ast) = newASTNodeLine(">", g_last_line);
-    }
-#line 1716 "parser.tab.c"
+#line 465 "parser.y"
+      {
+        /* Cria nó para operador > */
+        AST *node = newASTNodeLine("relacional", g_last_line);
+        addChild(node, newASTNodeText(">", g_last_line));
+        (yyval.ast) = node;
+      }
+#line 1700 "parser.tab.c"
     break;
 
   case 44: /* relacional: GREATER_EQUAL  */
-#line 479 "parser.y"
-    {
-      /* Cria nó para operador >= */
-      (yyval.ast) = newASTNodeLine(">=", g_last_line);
-    }
-#line 1725 "parser.tab.c"
+#line 472 "parser.y"
+      {
+        /* Cria nó para operador >= */
+        AST *node = newASTNodeLine("relacional", g_last_line);
+        addChild(node, newASTNodeText(">=", g_last_line));
+        (yyval.ast) = node;
+      }
+#line 1711 "parser.tab.c"
     break;
 
   case 45: /* relacional: EQUAL_EQUAL  */
-#line 484 "parser.y"
-    {
-      /* Cria nó para operador == */
-      (yyval.ast) = newASTNodeLine("==", g_last_line);
-    }
-#line 1734 "parser.tab.c"
+#line 479 "parser.y"
+      {
+        /* Cria nó para operador == */
+        AST *node = newASTNodeLine("relacional", g_last_line);
+        addChild(node, newASTNodeText("==", g_last_line));
+        (yyval.ast) = node;
+      }
+#line 1722 "parser.tab.c"
     break;
 
   case 46: /* relacional: DIFFERENT  */
-#line 489 "parser.y"
-    {
-      /* Cria nó para operador != */
-      (yyval.ast) = newASTNodeLine("!=", g_last_line);
-    }
-#line 1743 "parser.tab.c"
+#line 486 "parser.y"
+      {
+        /* Cria nó para operador != */
+        AST *node = newASTNodeLine("relacional", g_last_line);
+        addChild(node, newASTNodeText("!=", g_last_line));
+        (yyval.ast) = node;
+      }
+#line 1733 "parser.tab.c"
     break;
 
   case 47: /* soma_expressao: soma_expressao soma termo  */
-#line 498 "parser.y"
-    {
-      /* Cria nó para operação de soma ou subtração */
-      AST *node = newASTNodeLine("soma_expressao", g_last_line);
-      addChild(node, (yyvsp[-2].ast)); /* Adiciona a primeira soma_expressao */
-      addChild(node, (yyvsp[-1].ast)); /* Adiciona o operador soma */
-      addChild(node, (yyvsp[0].ast)); /* Adiciona o termo */
-      (yyval.ast) = node;
-    }
-#line 1756 "parser.tab.c"
+#line 497 "parser.y"
+      {
+        /* Cria nó para operação de soma ou subtração */
+        AST *node = newASTNodeLine("soma_expressao", g_last_line);
+        addChild(node, (yyvsp[-2].ast)); /* soma_expressao esquerda */
+        addChild(node, (yyvsp[-1].ast)); /* operador soma */
+        addChild(node, (yyvsp[0].ast)); /* termo */
+        (yyval.ast) = node;
+      }
+#line 1746 "parser.tab.c"
     break;
 
   case 48: /* soma_expressao: termo  */
-#line 507 "parser.y"
-    {
-      /* Passa o termo */
-      (yyval.ast) = (yyvsp[0].ast);
-    }
-#line 1765 "parser.tab.c"
+#line 506 "parser.y"
+      {
+        /* Passa o termo */
+        (yyval.ast) = (yyvsp[0].ast);
+      }
+#line 1755 "parser.tab.c"
     break;
 
   case 49: /* soma: PLUS  */
-#line 516 "parser.y"
-    {
-      /* Cria nó para operador + */
-      (yyval.ast) = newASTNodeLine("+", g_last_line);
-    }
-#line 1774 "parser.tab.c"
+#line 515 "parser.y"
+      {
+        /* Cria nó para operador + */
+        AST *node = newASTNodeText("+", g_last_line);
+        (yyval.ast) = node;
+      }
+#line 1765 "parser.tab.c"
     break;
 
   case 50: /* soma: MINUS  */
 #line 521 "parser.y"
-    {
-      /* Cria nó para operador - */
-      (yyval.ast) = newASTNodeLine("-", g_last_line);
-    }
-#line 1783 "parser.tab.c"
+      {
+        /* Cria nó para operador - */
+        AST *node = newASTNodeText("-", g_last_line);
+        (yyval.ast) = node;
+      }
+#line 1775 "parser.tab.c"
     break;
 
   case 51: /* termo: termo mult fator  */
-#line 530 "parser.y"
-    {
-      /* Cria nó para operação de multiplicação ou divisão */
-      AST *node = newASTNodeLine("termo", g_last_line);
-      addChild(node, (yyvsp[-2].ast)); /* Adiciona o primeiro termo */
-      addChild(node, (yyvsp[-1].ast)); /* Adiciona o operador multiplicação */
-      addChild(node, (yyvsp[0].ast)); /* Adiciona o fator */
-      (yyval.ast) = node;
-    }
-#line 1796 "parser.tab.c"
+#line 531 "parser.y"
+      {
+        /* Cria nó para operação de multiplicação ou divisão */
+        AST *node = newASTNodeLine("termo", g_last_line);
+        addChild(node, (yyvsp[-2].ast)); /* termo esquerdo */
+        addChild(node, (yyvsp[-1].ast)); /* operador */
+        addChild(node, (yyvsp[0].ast)); /* fator */
+        (yyval.ast) = node;
+      }
+#line 1788 "parser.tab.c"
     break;
 
   case 52: /* termo: fator  */
-#line 539 "parser.y"
-    {
-      /* Passa o fator */
-      (yyval.ast) = (yyvsp[0].ast);
-    }
-#line 1805 "parser.tab.c"
+#line 540 "parser.y"
+      {
+        /* Passa o fator */
+        (yyval.ast) = (yyvsp[0].ast);
+      }
+#line 1797 "parser.tab.c"
     break;
 
   case 53: /* mult: MULT  */
-#line 548 "parser.y"
-    {
-      /* Cria nó para operador * */
-      (yyval.ast) = newASTNodeLine("*", g_last_line);
-    }
-#line 1814 "parser.tab.c"
+#line 549 "parser.y"
+      {
+        /* Cria nó para operador * */
+        AST *node = newASTNodeText("*", g_last_line);
+        (yyval.ast) = node;
+      }
+#line 1807 "parser.tab.c"
     break;
 
   case 54: /* mult: DIV  */
-#line 553 "parser.y"
-    {
-      /* Cria nó para operador / */
-      (yyval.ast) = newASTNodeLine("/", g_last_line);
-    }
-#line 1823 "parser.tab.c"
+#line 555 "parser.y"
+      {
+        /* Cria nó para operador / */
+        AST *node = newASTNodeText("/", g_last_line);
+        (yyval.ast) = node;
+      }
+#line 1817 "parser.tab.c"
     break;
 
   case 55: /* fator: OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS  */
-#line 562 "parser.y"
-    {
-      /* Cria nó para expressão entre parênteses */
-      AST *node = newASTNodeLine("fator(paren)", g_last_line);
-      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
-         addChild(node, newASTNodeLine(")", g_last_line)); */
-      addChild(node, (yyvsp[-1].ast)); /* Adiciona a expressão */
-      (yyval.ast) = node;
-    }
-#line 1836 "parser.tab.c"
+#line 565 "parser.y"
+      {
+        /* Cria nó para expressão entre parênteses */
+        AST *node = newASTNodeLine("fator_paren", g_last_line);
+        addChild(node, (yyvsp[-1].ast)); /* expressão */
+        (yyval.ast) = node;
+      }
+#line 1828 "parser.tab.c"
     break;
 
   case 56: /* fator: var  */
-#line 571 "parser.y"
-    {
-      /* Cria nó para variável */
-      AST *node = newASTNodeLine("fator(var)", g_last_line);
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1847 "parser.tab.c"
+#line 572 "parser.y"
+      {
+        /* Cria nó para variável */
+        AST *node = newASTNodeLine("fator_var", g_last_line);
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1839 "parser.tab.c"
     break;
 
   case 57: /* fator: ativacao  */
-#line 578 "parser.y"
-    {
-      /* Cria nó para ativação de função */
-      AST *node = newASTNodeLine("fator(ativ)", g_last_line);
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1858 "parser.tab.c"
+#line 579 "parser.y"
+      {
+        /* Cria nó para ativação de função */
+        AST *node = newASTNodeLine("fator_ativacao", g_last_line);
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1850 "parser.tab.c"
     break;
 
   case 58: /* fator: NUM  */
-#line 585 "parser.y"
-    {
-      /* Cria nó para número */
-      char buf[64];
-      sprintf(buf, "NUM:%d", (yyvsp[0].ival));
-      AST *node = newASTNodeLine(buf, g_last_line);
-      /* Não adiciona filhos, pois é uma folha */
-      (yyval.ast) = node;
-    }
-#line 1871 "parser.tab.c"
+#line 586 "parser.y"
+      {
+        /* Cria nó para número */
+        char buf[32];
+        sprintf(buf, "NUM:%d", (yyvsp[0].ival));
+        AST *node = newASTNodeText(buf, g_last_line);
+        /* Não adiciona filhos, pois é uma folha */
+        (yyval.ast) = node;
+      }
+#line 1863 "parser.tab.c"
     break;
 
   case 59: /* ativacao: ID OPEN_PARENTHESIS args CLOSE_PARENTHESIS  */
-#line 598 "parser.y"
-    {
-      /* Cria nó para ativação de função */
-      AST *node = newASTNodeLine("ativacao", g_last_line);
-      addChild(node, newASTNodeLine((yyvsp[-3].str), g_last_line));
-      /* Removidos: addChild(node, newASTNodeLine("(", g_last_line));
-         addChild(node, newASTNodeLine(")", g_last_line)); */
-      addChild(node, (yyvsp[-1].ast)); /* Adiciona os argumentos */
-      free((yyvsp[-3].str)); /* Libera a string do ID */
-      (yyval.ast) = node;
-    }
-#line 1886 "parser.tab.c"
+#line 599 "parser.y"
+      {
+        /* Cria nó para ativação de função com o nome do ID diretamente */
+        AST *node = newASTNodeLine("ativacao", g_last_line);
+        addChild(node, newASTNodeText((yyvsp[-3].str), g_last_line)); /* Nome da função */
+        addChild(node, (yyvsp[-1].ast)); /* args */
+        free((yyvsp[-3].str)); /* Libera a string do ID */
+        (yyval.ast) = node;
+      }
+#line 1876 "parser.tab.c"
     break;
 
   case 60: /* args: arg_lista  */
-#line 613 "parser.y"
-    {
-      /* Passa a lista de argumentos */
-      (yyval.ast) = (yyvsp[0].ast);
-    }
-#line 1895 "parser.tab.c"
+#line 612 "parser.y"
+      {
+        /* Passa a lista de argumentos */
+        (yyval.ast) = (yyvsp[0].ast);
+      }
+#line 1885 "parser.tab.c"
     break;
 
   case 61: /* args: %empty  */
-#line 618 "parser.y"
-    {
-      /* Cria nó indicando que não há argumentos */
-      AST *node = newASTNodeLine("args_vazio", g_last_line);
-      (yyval.ast) = node;
-    }
-#line 1905 "parser.tab.c"
+#line 617 "parser.y"
+      {
+        /* Cria nó indicando que não há argumentos */
+        AST *node = newASTNodeLine("args_vazio", g_last_line);
+        (yyval.ast) = node;
+      }
+#line 1895 "parser.tab.c"
     break;
 
   case 62: /* arg_lista: arg_lista COMMA expressao  */
-#line 628 "parser.y"
-    {
-      /* Cria nó para lista de argumentos e adiciona o novo argumento */
-      AST *node = newASTNodeLine("arg_lista", g_last_line);
-      addChild(node, (yyvsp[-2].ast));
-      /* Removido: addChild(node, newASTNodeLine(",", g_last_line)); */
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1918 "parser.tab.c"
+#line 627 "parser.y"
+      {
+        /* Cria nó para lista de argumentos e adiciona o novo argumento */
+        AST *node = newASTNodeLine("arg_lista", g_last_line);
+        addChild(node, (yyvsp[-2].ast));
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1907 "parser.tab.c"
     break;
 
   case 63: /* arg_lista: expressao  */
-#line 637 "parser.y"
-    {
-      /* Cria nó para lista de argumentos com um único argumento */
-      AST *node = newASTNodeLine("arg_lista", g_last_line);
-      addChild(node, (yyvsp[0].ast));
-      (yyval.ast) = node;
-    }
-#line 1929 "parser.tab.c"
+#line 635 "parser.y"
+      {
+        /* Cria nó para lista de argumentos com um único argumento */
+        AST *node = newASTNodeLine("arg_lista", g_last_line);
+        addChild(node, (yyvsp[0].ast));
+        (yyval.ast) = node;
+      }
+#line 1918 "parser.tab.c"
     break;
 
 
-#line 1933 "parser.tab.c"
+#line 1922 "parser.tab.c"
 
       default: break;
     }
@@ -2122,13 +2111,13 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 645 "parser.y"
+#line 643 "parser.y"
 
 
 /* Função para captura de erros sintáticos */
 void yyerror(const char *s) {
     fprintf(stderr, 
-      "ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
-      g_last_lexeme, g_last_line, g_last_col
+      "ERRO SINTATICO: \"%s\" [linha: %d]\n",
+      s, g_last_line
     );
 }

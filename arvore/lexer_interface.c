@@ -101,8 +101,8 @@ int yylex(void) {
         case L_DIFF:       return DIFFERENT;
         case L_GREATER:    return GREATER;
         case L_GREATER_EQ: return GREATER_EQUAL;
-        case L_MINOR:      return MINOR;
-        case L_MINOR_EQ:   return MINOR_EQUAL;
+        case L_MINOR:      return LESS;
+        case L_MINOR_EQ:   return LESS_EQUAL;
         case L_SEMICOLON:  return SEMICOLON;
         case L_COMMA:      return COMMA;
         case L_OPAREN:     return OPEN_PARENTHESIS;

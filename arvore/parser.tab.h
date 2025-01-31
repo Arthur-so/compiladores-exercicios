@@ -71,8 +71,8 @@ extern int yydebug;
     DIFFERENT = 272,               /* DIFFERENT  */
     GREATER = 273,                 /* GREATER  */
     GREATER_EQUAL = 274,           /* GREATER_EQUAL  */
-    MINOR = 275,                   /* MINOR  */
-    MINOR_EQUAL = 276,             /* MINOR_EQUAL  */
+    LESS = 275,                    /* LESS  */
+    LESS_EQUAL = 276,              /* LESS_EQUAL  */
     SEMICOLON = 277,               /* SEMICOLON  */
     COMMA = 278,                   /* COMMA  */
     OPEN_PARENTHESIS = 279,        /* OPEN_PARENTHESIS  */
@@ -80,7 +80,8 @@ extern int yydebug;
     OPEN_SQUARE_BRACKETS = 281,    /* OPEN_SQUARE_BRACKETS  */
     CLOSE_SQUARE_BRACKETS = 282,   /* CLOSE_SQUARE_BRACKETS  */
     OPEN_CURLY_BRACKETS = 283,     /* OPEN_CURLY_BRACKETS  */
-    CLOSE_CURLY_BRACKETS = 284     /* CLOSE_CURLY_BRACKETS  */
+    CLOSE_CURLY_BRACKETS = 284,    /* CLOSE_CURLY_BRACKETS  */
+    IF_ELSE = 285                  /* IF_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -89,13 +90,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 23 "parser.y"
+#line 30 "parser.y"
 
     AST *ast;   /* Para nós da AST */
     char *str;  /* Para lexemas de ID */
     int  ival;  /* Para valores de NUM */
 
-#line 99 "parser.tab.h"
+#line 100 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

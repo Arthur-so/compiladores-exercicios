@@ -12,6 +12,10 @@ extern int yyparse();
 
 Lexer *lexer = NULL;
 
+char g_last_lexeme[64];
+int  g_last_line;
+int  g_last_col;
+
 /* Função para fazer somente a varredura léxica e imprimir tokens */
 void doLexicalAnalysisOnly(Lexer *lexer) {
     while (1) {
@@ -84,7 +88,7 @@ int main(int argc, char **argv) {
 
             /* 3) Se for AST */
             if (print_ast) {
-                printAST(g_root);
+                printAST(g_root, 0);
             }
             /* 4) Se for Tabela de Símbolos */
             if (print_symtab) {
