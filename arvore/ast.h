@@ -6,7 +6,6 @@ typedef struct AST {
     int line;             // Linha do código onde o nó aparece
     struct AST **children;  // Array de ponteiros para filhos
     int numChildren;        // Número atual de filhos
-    int capacity;           // Capacidade do array de filhos
 } AST;
 
 /* Funções para criação e manipulação de nós da AST */

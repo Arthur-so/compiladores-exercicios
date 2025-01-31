@@ -79,9 +79,9 @@ void buildSymtab(AST *root) {
 static void buildSymtabRec(AST *node) {
     if (!node) return;
 
-    /* Se for "fun_declaracao", muda escopo */
-    if (strcmp(node->name, "fun_declaracao") == 0) {
-        /* ex.: children[0] = tipo, children[1] = ID, etc. */
+    /* Se for "Func", muda escopo */
+    if (strcmp(node->name, "Func") == 0) {
+        /* children[0] = tipo_especificador, children[1] = ID, children[2] = Param_list, children[3] = Body */
         AST *tipoNode = node->children[0];
         AST *idNode   = node->children[1];
         const char *tipo = tipoNode->name; /* "INT", "VOID" etc. */
@@ -101,8 +101,8 @@ static void buildSymtabRec(AST *node) {
         /* pushScope para as variáveis/parâmetros da função */
         pushScope(funName);
     }
-    else if (strcmp(node->name, "var_declaracao") == 0) {
-        /* children[0] = "INT"/"VOID", children[1] = ID */
+    else if (strcmp(node->name, "Decl_var") == 0) {
+        /* children[0] = tipo_especificador, children[1] = ID */
         const char *tipo = node->children[0]->name;
         AST *idNode      = node->children[1];
         const char *varName = idNode->name;
@@ -118,8 +118,8 @@ static void buildSymtabRec(AST *node) {
             semanticError(msg, line);
         }
     }
-    else if (strcmp(node->name, "var_declaracao_array") == 0) {
-        /* children[0] = tipo, children[1] = ID */
+    else if (strcmp(node->name, "Decl_var_array") == 0) {
+        /* children[0] = tipo_especificador, children[1] = ID, children[2] = tamanho */
         const char *tipo = node->children[0]->name;
         AST *idNode      = node->children[1];
         const char *varName = idNode->name;
@@ -135,8 +135,8 @@ static void buildSymtabRec(AST *node) {
             semanticError(msg, line);
         }
     }
-    else if (strcmp(node->name, "param") == 0) {
-        /* children[0] = tipo, children[1] = ID */
+    else if (strcmp(node->name, "Param") == 0) {
+        /* children[0] = tipo_especificador, children[1] = ID */
         const char *tipo = node->children[0]->name;
         AST *idNode      = node->children[1];
         const char *paramName = idNode->name;
@@ -152,12 +152,14 @@ static void buildSymtabRec(AST *node) {
             semanticError(msg, line);
         }
     }
-    else if (strcmp(node->name, "param_array") == 0) {
+    else if (strcmp(node->name, "Param_array") == 0) {
+        /* children[0] = tipo_especificador, children[1] = ID */
         const char *tipo = node->children[0]->name;
         AST *idNode      = node->children[1];
         const char *paramName = idNode->name;
         int line = node->line;
 
+        /* Insere o parâmetro array na tabela de símbolos */
         int ok = st_insert(paramName, topScope(), tipo, "vetor", line);
         if (!ok) {
             char msg[256];
@@ -168,14 +170,25 @@ static void buildSymtabRec(AST *node) {
             semanticError(msg, line);
         }
     }
+    else if (strcmp(node->name, "Param_list") == 0) {
+        /* Percorre todos os parâmetros na lista */
+        for (int i = 0; i < node->numChildren; i++) {
+            buildSymtabRec(node->children[i]);
+        }
+        return; /* Evita processar novamente os filhos */
+    }
+    else if (strcmp(node->name, "Param_list_void") == 0) {
+        /* Nada a fazer, já que não há parâmetros */
+        return;
+    }
 
     /* Percorre filhos */
     for (int i = 0; i < node->numChildren; i++) {
         buildSymtabRec(node->children[i]);
     }
 
-    /* Se terminou "fun_declaracao", popScope */
-    if (strcmp(node->name, "fun_declaracao") == 0) {
+    /* Se terminou "Func", popScope */
+    if (strcmp(node->name, "Func") == 0) {
         popScope();
     }
 }
@@ -184,34 +197,42 @@ static void buildSymtabRec(AST *node) {
    2) checkSemantics 
       - Faz a 2ª passada
       - Verifica uso de IDs
-      - Repete pushScope/popScope para "fun_declaracao"
+      - Repete pushScope/popScope para "Func"
    ------------------------------------------------- */
 static void checkSemanticsRec(AST *node);
 
 void checkSemantics(AST *root) {
-    /* Se quiser, pushScope("global") aqui também */
-    /* e popScope() no final, mas iremos replicar
-       exatamente a mesma lógica do buildSymtabRec. */
     checkSemanticsRec(root);
 }
 
 static void checkSemanticsRec(AST *node) {
     if (!node) return;
 
-    /* Ao entrar em "fun_declaracao", pushScope */
-    if (strcmp(node->name, "fun_declaracao") == 0) {
+    /* Ao entrar em "Func", pushScope */
+    if (strcmp(node->name, "Func") == 0) {
         AST *idNode   = node->children[1];
         const char *funName = idNode->name;
 
         pushScope(funName);
     }
+    else if (strcmp(node->name, "Param_list") == 0) {
+        /* Processa cada parâmetro na lista */
+        for (int i = 0; i < node->numChildren; i++) {
+            checkSemanticsRec(node->children[i]);
+        }
+        return; /* Evita processar novamente os filhos */
+    }
+    else if (strcmp(node->name, "Param_list_void") == 0) {
+        /* Nada a fazer */
+        return;
+    }
 
     /* ---- Verificações ---- */
-    if (strcmp(node->name, "var") == 0) {
-        /* child[0] = ID */
+    if (strcmp(node->name, "Var") == 0) {
+        /* children[0] = ID */
         AST *idNode = node->children[0];
         const char *varName = idNode->name;
-        int line = idNode->line;
+        int line = node->line;
 
         /* st_lookup_all => procura no topoScope(), se não achar => global */
         BucketList *b = st_lookup_all(varName, topScope());
@@ -227,11 +248,11 @@ static void checkSemanticsRec(AST *node) {
             st_add_lineno(varName, topScope(), line);
         }
     }
-    else if (strcmp(node->name, "var_array") == 0) {
-        /* child[0] = ID */
+    else if (strcmp(node->name, "Var_array") == 0) {
+        /* children[0] = ID */
         AST *idNode = node->children[0];
         const char *varName = idNode->name;
-        int line = idNode->line;
+        int line = node->line;
 
         BucketList *b = st_lookup_all(varName, topScope());
         if (!b) {
@@ -254,11 +275,11 @@ static void checkSemanticsRec(AST *node) {
             }
         }
     }
-    else if (strcmp(node->name, "ativacao") == 0) {
-        /* child[0] = ID */
+    else if (strcmp(node->name, "Function_call") == 0) {
+        /* children[0] = ID (nome da função) */
         AST *idNode = node->children[0];
         const char *funName = idNode->name;
-        int line = idNode->line;
+        int line = node->line;
 
         BucketList *b = st_lookup_all(funName, topScope());
         if (!b) {
@@ -287,8 +308,8 @@ static void checkSemanticsRec(AST *node) {
         checkSemanticsRec(node->children[i]);
     }
 
-    /* Ao sair de "fun_declaracao", popScope */
-    if (strcmp(node->name, "fun_declaracao") == 0) {
+    /* Ao sair de "Func", popScope */
+    if (strcmp(node->name, "Func") == 0) {
         popScope();
     }
 }

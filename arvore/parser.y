@@ -3,15 +3,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lexeme.h"
-#include "ast.h"
+#include "ast.h"        // Definições de nó da AST e funções auxiliares
+#include "lexeme.h"     // Definições relacionadas ao lexer
 
 /* Declarações necessárias para o Bison */
 int yylex();
 void yyerror(const char *s);
 
+/* Variáveis globais para armazenar a AST */
 AST *g_root = NULL;
 
+/* Variáveis globais para rastrear o último token lido */
 extern char g_last_lexeme[64];
 extern int  g_last_line;
 extern int  g_last_col;
@@ -56,6 +58,7 @@ void addChild(AST *parent, AST *child);
 %nonassoc IF_ELSE
 %left ELSE
 
+
 /* Início da gramática */
 %start programa
 
@@ -76,18 +79,14 @@ programa:
 declaracao_lista:
       declaracao_lista declaracao
       {
-        /* Cria nó para lista de declarações e adiciona filhos */
-        AST *node = newASTNodeLine("declaracao_lista", g_last_line);
-        addChild(node, $1);
-        addChild(node, $2);
-        $$ = node;
+        /* Adiciona a declaração à lista existente */
+        addChild($1, $2);
+        $$ = $1;
       }
     | declaracao
       {
-        /* Cria nó para lista de declarações com uma única declaração */
-        AST *node = newASTNodeLine("declaracao_lista", g_last_line);
-        addChild(node, $1);
-        $$ = node;
+        /* Passa a declaração como a lista */
+        $$ = $1;
       }
     ;
 
@@ -95,17 +94,13 @@ declaracao_lista:
 declaracao:
       var_declaracao
       {
-        /* Cria nó para declaração de variável */
-        AST *node = newASTNodeLine("declaracao_var", g_last_line);
-        addChild(node, $1);
-        $$ = node;
+        /* Passa a declaração de variável */
+        $$ = $1;
       }
     | fun_declaracao
       {
-        /* Cria nó para declaração de função */
-        AST *node = newASTNodeLine("declaracao_fun", g_last_line);
-        addChild(node, $1);
-        $$ = node;
+        /* Passa a declaração de função */
+        $$ = $1;
       }
     ;
 
@@ -114,25 +109,20 @@ var_declaracao:
       tipo_especificador ID SEMICOLON
       {
         /* Cria nó para declaração de variável simples */
-        AST *node = newASTNodeLine("var_declaracao", g_last_line);
+        AST *node = newASTNodeLine("Decl_var", g_last_line);
         addChild(node, $1); /* tipo_especificador */
-        AST *idNode = newASTNodeText($2, g_last_line); /* Nome do ID diretamente */
-        addChild(node, idNode);
+        addChild(node, newASTNodeText($2, g_last_line)); /* Nome do ID diretamente */
         free($2); /* Libera a string do ID */
         $$ = node;
       }
     | tipo_especificador ID OPEN_SQUARE_BRACKETS NUM CLOSE_SQUARE_BRACKETS SEMICOLON
       {
         /* Cria nó para declaração de vetor */
-        AST *node = newASTNodeLine("var_declaracao_array", g_last_line);
+        AST *node = newASTNodeLine("Decl_var_array", g_last_line);
         addChild(node, $1); /* tipo_especificador */
-        AST *idNode = newASTNodeText($2, g_last_line); /* Nome do ID diretamente */
-        addChild(node, idNode);
+        addChild(node, newASTNodeText($2, g_last_line)); /* Nome do ID diretamente */
+        addChild(node, newASTNodeTextInt($4, g_last_line)); /* Tamanho do vetor */
         free($2); /* Libera a string do ID */
-        
-        /* Adiciona o número do tamanho do vetor */
-        AST *numNode = newASTNodeTextInt($4, g_last_line);
-        addChild(node, numNode);
         $$ = node;
       }
     ;
@@ -154,74 +144,107 @@ tipo_especificador:
     ;
 
 /* Regra para declaração de função: fun_declaracao -> tipo_especificador ID ( params ) composto_decl */
+// fun_declaracao:
+//       tipo_especificador ID OPEN_PARENTHESIS params CLOSE_PARENTHESIS composto_decl
+//       {
+//         /* Cria nó para declaração de função */
+//         AST *node = newASTNodeLine("Func", g_last_line);
+//         addChild(node, $1); /* tipo_especificador */
+//         addChild(node, newASTNodeText($2, g_last_line)); /* Nome da função diretamente */
+//         free($2); /* Libera a string do ID */
+//         addChild(node, $4); /* params */
+//         addChild(node, $6); /* corpo da função */
+//         $$ = node;
+//       }
+//     ;
 fun_declaracao:
       tipo_especificador ID OPEN_PARENTHESIS params CLOSE_PARENTHESIS composto_decl
       {
         /* Cria nó para declaração de função */
-        AST *node = newASTNodeLine("fun_declaracao", g_last_line);
+        AST *node = newASTNodeLine("Func", g_last_line);
         addChild(node, $1); /* tipo_especificador */
-        AST *idNode = newASTNodeText($2, g_last_line); /* Nome do ID diretamente */
-        addChild(node, idNode);
+        addChild(node, newASTNodeText($2, g_last_line)); /* Nome da função diretamente */
         free($2); /* Libera a string do ID */
-        addChild(node, $4); /* params */
+        addChild(node, $4); /* params (Param_list) */
         addChild(node, $6); /* corpo da função */
         $$ = node;
       }
     ;
 
 /* Regra para parâmetros: params -> param_lista | VOID */
+// params:
+//       param_lista
+//       {
+//         /* Passa a lista de parâmetros */
+//         $$ = $1;
+//       }
+//     | VOID
+//       {
+//         /* Cria nó indicando que não há parâmetros */
+//         AST *node = newASTNodeLine("params_VOID", g_last_line);
+//         $$ = node;
+//       }
+//     ;
 params:
       param_lista
       {
-        /* Passa a lista de parâmetros */
         $$ = $1;
       }
     | VOID
       {
-        /* Cria nó indicando que não há parâmetros */
-        AST *node = newASTNodeLine("params_VOID", g_last_line);
+        AST *node = newASTNodeLine("Param_list_void", g_last_line);
         $$ = node;
       }
     ;
 
 /* Regra para lista de parâmetros: param_lista -> param_lista , param | param */
+// param_lista:
+//       param_lista COMMA param
+//       {
+//         /* Adiciona o parâmetro à lista existente */
+//         addChild($1, $3);
+//         $$ = $1;
+//       }    
+//     | param
+//       {
+//         /* Passa o parâmetro como a lista */
+//         $$ = $1;
+//       }
+//     ;
 param_lista:
       param_lista COMMA param
       {
-        /* Cria nó para lista de parâmetros e adiciona o novo parâmetro */
-        AST *node = newASTNodeLine("param_lista", g_last_line);
-        addChild(node, $1);
-        addChild(node, $3);
-        $$ = node;
-      }    
+        /* Adiciona o parâmetro à lista existente */
+        addChild($1, $3);
+        $$ = $1;
+      }
     | param
       {
-        /* Cria nó para lista de parâmetros com um único parâmetro */
-        AST *node = newASTNodeLine("param_lista", g_last_line);
+        /* Cria um nó de lista de parâmetros */
+        AST *node = newASTNodeLine("Param_list", g_last_line);
         addChild(node, $1);
         $$ = node;
       }
     ;
+
 
 /* Regra para um parâmetro: param -> tipo_especificador ID | tipo_especificador ID [] */
 param:
       tipo_especificador ID
       {
         /* Cria nó para parâmetro simples */
-        AST *node = newASTNodeLine("param", g_last_line);
+        AST *node = newASTNodeLine("Param", g_last_line);
         addChild(node, $1); /* tipo_especificador */
-        AST *idNode = newASTNodeText($2, g_last_line); /* Nome do ID diretamente */
-        addChild(node, idNode);
+        addChild(node, newASTNodeText($2, g_last_line)); /* Nome do ID diretamente */
         free($2); /* Libera a string do ID */
         $$ = node;
       }
     | tipo_especificador ID OPEN_SQUARE_BRACKETS CLOSE_SQUARE_BRACKETS
       {
         /* Cria nó para parâmetro que é um vetor */
-        AST *node = newASTNodeLine("param_array", g_last_line);
+        AST *node = newASTNodeLine("Param_array", g_last_line);
         addChild(node, $1); /* tipo_especificador */
-        AST *idNode = newASTNodeText($2, g_last_line); /* Nome do ID diretamente */
-        addChild(node, idNode);
+        addChild(node, newASTNodeText($2, g_last_line)); /* Nome do ID diretamente */
         free($2); /* Libera a string do ID */
         $$ = node;
       }
@@ -232,7 +255,7 @@ composto_decl:
       OPEN_CURLY_BRACKETS local_declaracoes statement_lista CLOSE_CURLY_BRACKETS
       {
         /* Cria nó para corpo composto da função */
-        AST *node = newASTNodeLine("composto_decl", g_last_line);
+        AST *node = newASTNodeLine("Body", g_last_line);
         addChild(node, $2); /* local_declaracoes */
         addChild(node, $3); /* statement_lista */
         $$ = node;
@@ -243,35 +266,30 @@ composto_decl:
 local_declaracoes:
       local_declaracoes var_declaracao
       {
-        /* Cria nó para declarações locais e adiciona a nova declaração */
-        AST *node = newASTNodeLine("local_declaracoes", g_last_line);
-        addChild(node, $1);
-        addChild(node, $2);
-        $$ = node;
+        /* Adiciona a declaração à lista existente */
+        addChild($1, $2);
+        $$ = $1;
       }
     | /* vazio */
       {
         /* Cria nó indicando que não há declarações locais */
-        AST *node = newASTNodeLine("local_declaracoes_vazio", g_last_line);
+        AST *node = newASTNodeLine("Decl_local_vazio", g_last_line);
         $$ = node;
       }
     ;
 
-/* Regra para lista de statements: statement_lista -> statement_lista statement | vazio */
+/* Regra para lista de statements: statement_lista -> statement_lista statement | statement */
 statement_lista:
       statement_lista statement
       {
-        /* Cria nó para lista de statements e adiciona o novo statement */
-        AST *node = newASTNodeLine("statement_lista", g_last_line);
-        addChild(node, $1);
-        addChild(node, $2);
-        $$ = node;
+        /* Adiciona o statement à lista existente */
+        addChild($1, $2);
+        $$ = $1;
       }
-    | /* vazio */
+    | statement
       {
-        /* Cria nó indicando que não há statements */
-        AST *node = newASTNodeLine("statement_lista_vazio", g_last_line);
-        $$ = node;
+        /* Passa o statement como a lista */
+        $$ = $1;
       }
     ;
 
@@ -279,38 +297,28 @@ statement_lista:
 statement:
       expressao_decl
       {
-        /* Cria nó para statement de expressão */
-        AST *node = newASTNodeLine("statement_expr", g_last_line);
-        addChild(node, $1);
-        $$ = node;
+        /* Passa o statement de expressão */
+        $$ = $1;
       }
     | composto_decl
       {
-        /* Cria nó para statement composto */
-        AST *node = newASTNodeLine("statement_composto", g_last_line);
-        addChild(node, $1);
-        $$ = node;
+        /* Passa o statement composto */
+        $$ = $1;
       }
     | selecao_decl
       {
-        /* Cria nó para statement de seleção */
-        AST *node = newASTNodeLine("statement_selecao", g_last_line);
-        addChild(node, $1);
-        $$ = node;
+        /* Passa o statement de seleção */
+        $$ = $1;
       }
     | iteracao_decl
       {
-        /* Cria nó para statement de iteração */
-        AST *node = newASTNodeLine("statement_iteracao", g_last_line);
-        addChild(node, $1);
-        $$ = node;
+        /* Passa o statement de iteração */
+        $$ = $1;
       }
     | retorno_decl
       {
-        /* Cria nó para statement de retorno */
-        AST *node = newASTNodeLine("statement_retorno", g_last_line);
-        addChild(node, $1);
-        $$ = node;
+        /* Passa o statement de retorno */
+        $$ = $1;
       }
     ;
 
@@ -318,14 +326,12 @@ statement:
 expressao_decl:
       expressao SEMICOLON
       {
-        /* Cria nó para declaração de expressão */
-        AST *node = newASTNodeLine("expressao_decl", g_last_line);
-        addChild(node, $1);
-        $$ = node;
+        /* Passa a expressão diretamente */
+        $$ = $1;
       }
     | SEMICOLON
       {
-        /* Representa uma declaração de expressão vazia; retorna NULL para evitar nós desnecessários */
+        /* Representa uma declaração de expressão vazia; ignora */
         $$ = NULL;
       }
     ;
@@ -335,7 +341,7 @@ selecao_decl:
       IF OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement %prec IF_ELSE
       {
         /* Cria nó para seleção "if" sem "else" */
-        AST *node = newASTNodeLine("selecao_if", g_last_line);
+        AST *node = newASTNodeLine("If", g_last_line);
         addChild(node, newASTNodeText("IF", g_last_line));
         addChild(node, $3); /* expressão */
         addChild(node, $5); /* statement */
@@ -344,7 +350,7 @@ selecao_decl:
     | IF OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement ELSE statement
       {
         /* Cria nó para seleção "if-else" */
-        AST *node = newASTNodeLine("selecao_if_else", g_last_line);
+        AST *node = newASTNodeLine("If_else", g_last_line);
         addChild(node, newASTNodeText("IF", g_last_line));
         addChild(node, $3); /* expressão */
         addChild(node, $5); /* statement do if */
@@ -359,7 +365,7 @@ iteracao_decl:
       WHILE OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS statement
       {
         /* Cria nó para iteração "while" */
-        AST *node = newASTNodeLine("iteracao_while", g_last_line);
+        AST *node = newASTNodeLine("While", g_last_line);
         addChild(node, newASTNodeText("WHILE", g_last_line));
         addChild(node, $3); /* expressão */
         addChild(node, $5); /* statement */
@@ -372,14 +378,14 @@ retorno_decl:
       RETURN SEMICOLON
       {
         /* Cria nó para retorno vazio */
-        AST *node = newASTNodeLine("retorno_decl", g_last_line);
+        AST *node = newASTNodeLine("Return", g_last_line);
         addChild(node, newASTNodeText("RETURN", g_last_line));
         $$ = node;
       }
     | RETURN expressao SEMICOLON
       {
         /* Cria nó para retorno com expressão */
-        AST *node = newASTNodeLine("retorno_decl", g_last_line);
+        AST *node = newASTNodeLine("Return_expr", g_last_line);
         addChild(node, newASTNodeText("RETURN", g_last_line));
         addChild(node, $2); /* expressão */
         $$ = node;
@@ -391,7 +397,7 @@ var:
       ID
       {
         /* Cria nó para variável simples com o nome do ID diretamente */
-        AST *node = newASTNodeLine("var", g_last_line);
+        AST *node = newASTNodeLine("Var", g_last_line);
         addChild(node, newASTNodeText($1, g_last_line));
         free($1); /* Libera a string do ID */
         $$ = node;
@@ -399,7 +405,7 @@ var:
     | ID OPEN_SQUARE_BRACKETS expressao CLOSE_SQUARE_BRACKETS
       {
         /* Cria nó para variável com índice com o nome do ID diretamente */
-        AST *node = newASTNodeLine("var_array", g_last_line);
+        AST *node = newASTNodeLine("Var_array", g_last_line);
         addChild(node, newASTNodeText($1, g_last_line));
         addChild(node, $3); /* Adiciona a expressão de índice */
         free($1); /* Libera a string do ID */
@@ -412,7 +418,7 @@ expressao:
       var EQUAL expressao
       {
         /* Cria nó para atribuição */
-        AST *node = newASTNodeLine("expressao_atribuicao", g_last_line);
+        AST *node = newASTNodeLine("Assign", g_last_line);
         addChild(node, $1); /* var */
         addChild(node, newASTNodeText("=", g_last_line));
         addChild(node, $3); /* expressão */
@@ -430,7 +436,7 @@ simples_expressao:
       soma_expressao relacional soma_expressao
       {
         /* Cria nó para expressão relacional */
-        AST *node = newASTNodeLine("simples_expressao", g_last_line);
+        AST *node = newASTNodeLine("Relational_op", g_last_line);
         addChild(node, $1); /* primeira soma_expressao */
         addChild(node, $2); /* operador relacional */
         addChild(node, $3); /* segunda soma_expressao */
@@ -448,43 +454,37 @@ relacional:
       LESS_EQUAL
       {
         /* Cria nó para operador <= */
-        AST *node = newASTNodeLine("relacional", g_last_line);
-        addChild(node, newASTNodeText("<=", g_last_line));
+        AST *node = newASTNodeText("<=", g_last_line);
         $$ = node;
       }
     | LESS
       {
         /* Cria nó para operador < */
-        AST *node = newASTNodeLine("relacional", g_last_line);
-        addChild(node, newASTNodeText("<", g_last_line));
+        AST *node = newASTNodeText("<", g_last_line);
         $$ = node;
       }
     | GREATER
       {
         /* Cria nó para operador > */
-        AST *node = newASTNodeLine("relacional", g_last_line);
-        addChild(node, newASTNodeText(">", g_last_line));
+        AST *node = newASTNodeText(">", g_last_line);
         $$ = node;
       }
     | GREATER_EQUAL
       {
         /* Cria nó para operador >= */
-        AST *node = newASTNodeLine("relacional", g_last_line);
-        addChild(node, newASTNodeText(">=", g_last_line));
+        AST *node = newASTNodeText(">=", g_last_line);
         $$ = node;
       }
     | EQUAL_EQUAL
       {
         /* Cria nó para operador == */
-        AST *node = newASTNodeLine("relacional", g_last_line);
-        addChild(node, newASTNodeText("==", g_last_line));
+        AST *node = newASTNodeText("==", g_last_line);
         $$ = node;
       }
     | DIFFERENT
       {
         /* Cria nó para operador != */
-        AST *node = newASTNodeLine("relacional", g_last_line);
-        addChild(node, newASTNodeText("!=", g_last_line));
+        AST *node = newASTNodeText("!=", g_last_line);
         $$ = node;
       }
     ;
@@ -494,7 +494,7 @@ soma_expressao:
       soma_expressao soma termo
       {
         /* Cria nó para operação de soma ou subtração */
-        AST *node = newASTNodeLine("soma_expressao", g_last_line);
+        AST *node = newASTNodeLine("Add_Sub", g_last_line);
         addChild(node, $1); /* soma_expressao esquerda */
         addChild(node, $2); /* operador soma */
         addChild(node, $3); /* termo */
@@ -528,7 +528,7 @@ termo:
       termo mult fator
       {
         /* Cria nó para operação de multiplicação ou divisão */
-        AST *node = newASTNodeLine("termo", g_last_line);
+        AST *node = newASTNodeLine("Mul_Div", g_last_line);
         addChild(node, $1); /* termo esquerdo */
         addChild(node, $2); /* operador */
         addChild(node, $3); /* fator */
@@ -562,29 +562,25 @@ fator:
       OPEN_PARENTHESIS expressao CLOSE_PARENTHESIS
       {
         /* Cria nó para expressão entre parênteses */
-        AST *node = newASTNodeLine("fator_paren", g_last_line);
+        AST *node = newASTNodeLine("Paren_expr", g_last_line);
         addChild(node, $2); /* expressão */
         $$ = node;
       }
     | var
       {
-        /* Cria nó para variável */
-        AST *node = newASTNodeLine("fator_var", g_last_line);
-        addChild(node, $1);
-        $$ = node;
+        /* Passa a variável */
+        $$ = $1;
       }
     | ativacao
       {
-        /* Cria nó para ativação de função */
-        AST *node = newASTNodeLine("fator_ativacao", g_last_line);
-        addChild(node, $1);
-        $$ = node;
+        /* Passa a ativação de função */
+        $$ = $1;
       }
     | NUM
       {
         /* Cria nó para número */
         char buf[32];
-        sprintf(buf, "NUM:%d", $1);
+        sprintf(buf, "Num:%d", $1);
         AST *node = newASTNodeText(buf, g_last_line);
         /* Não adiciona filhos, pois é uma folha */
         $$ = node;
@@ -596,7 +592,7 @@ ativacao:
       ID OPEN_PARENTHESIS args CLOSE_PARENTHESIS
       {
         /* Cria nó para ativação de função com o nome do ID diretamente */
-        AST *node = newASTNodeLine("ativacao", g_last_line);
+        AST *node = newASTNodeLine("Function_call", g_last_line);
         addChild(node, newASTNodeText($1, g_last_line)); /* Nome da função */
         addChild(node, $3); /* args */
         free($1); /* Libera a string do ID */
@@ -614,32 +610,40 @@ args:
     | /* vazio */
       {
         /* Cria nó indicando que não há argumentos */
-        AST *node = newASTNodeLine("args_vazio", g_last_line);
+        AST *node = newASTNodeLine("Args_empty", g_last_line);
         $$ = node;
       }
     ;
 
 /* Regra para lista de argumentos: arg_lista -> arg_lista , expressao | expressao */
+// arg_lista:
+//       arg_lista COMMA expressao
+//       {
+//         /* Adiciona o argumento à lista existente */
+//         addChild($1, $3);
+//         $$ = $1;
+//       }
+//     | expressao
+//       {
+//         /* Passa a expressão como a lista */
+//         $$ = $1;
+//       }
+//     ;
 arg_lista:
       arg_lista COMMA expressao
       {
-        /* Cria nó para lista de argumentos e adiciona o novo argumento */
-        AST *node = newASTNodeLine("arg_lista", g_last_line);
-        addChild(node, $1);
-        addChild(node, $3);
-        $$ = node;
+        addChild($1, $3);
+        $$ = $1;
       }
     | expressao
       {
-        /* Cria nó para lista de argumentos com um único argumento */
-        AST *node = newASTNodeLine("arg_lista", g_last_line);
+        AST *node = newASTNodeLine("Arg_list", g_last_line);
         addChild(node, $1);
         $$ = node;
       }
     ;
 
 %%
-
 /* Função para captura de erros sintáticos */
 void yyerror(const char *s) {
     fprintf(stderr, 
