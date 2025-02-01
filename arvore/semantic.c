@@ -5,32 +5,35 @@
 #include "ast.h"
 #include "symtab.h"
 
-/* -------------------------------------------------
-   Pilha de escopos: controla qual escopo atual
-   ------------------------------------------------- */
+/* Pilha de escopos: controla qual escopo atual */
 #define MAX_SCOPE_STACK 100
 static char *scopeStack[MAX_SCOPE_STACK];
 static int scopeTop = -1;
 
+/* Adiciona novo escopo */
 static void pushScope(const char *scope) {
     if (scopeTop < MAX_SCOPE_STACK - 1) {
         scopeTop++;
         scopeStack[scopeTop] = strdup(scope);
-    } else {
+    }
+    else {
         fprintf(stderr, "ERRO: pilha de escopos cheia!\n");
     }
 }
 
+/* Remove escopo atual */
 static void popScope() {
     if (scopeTop >= 0) {
         free(scopeStack[scopeTop]);
         scopeStack[scopeTop] = NULL;
         scopeTop--;
-    } else {
+    }
+    else {
         fprintf(stderr, "ERRO: popScope em pilha vazia!\n");
     }
 }
 
+/* Retorna escopo atual */
 static const char* topScope() {
     if (scopeTop >= 0) {
         return scopeStack[scopeTop];
@@ -38,9 +41,7 @@ static const char* topScope() {
     return "global"; 
 }
 
-/* -------------------------------------------------
-   Contador de erros semânticos
-   ------------------------------------------------- */
+/* Contador de erros */
 static int semanticErrors = 0;
 
 static void semanticError(const char *msg, int line) {
@@ -52,20 +53,10 @@ static void semanticError(const char *msg, int line) {
     );
 }
 
-/* Expor se quiser usar em outro lugar (main.c):
-   int getSemanticErrorCount(); */
-int getSemanticErrorCount() {
-    return semanticErrors;
-}
 
-/* -------------------------------------------------
-   1) buildSymtab 
-      - Faz a 1ª passada na AST
-      - Insere declarações na Tabela de Símbolos
-      - Usa pushScope/popScope para funções
-   ------------------------------------------------- */
 static void buildSymtabRec(AST *node);
 
+/* Faz a 1ª passada na AST e insere declarações na Tabela de Símbolos */
 void buildSymtab(AST *root) {
     initSymTab();        /* zera a tabela */
     pushScope("global"); /* escopo inicial */
@@ -73,18 +64,20 @@ void buildSymtab(AST *root) {
     st_insert("input",  "global", "int",  "funcao", 0);
     st_insert("output", "global", "void", "funcao", 0);
     buildSymtabRec(root);
-    popScope();          /* sai do escopo global (no final) */
+    popScope();          /* sai do escopo global */
 }
 
+/* Percorre a AST */
 static void buildSymtabRec(AST *node) {
-    if (!node) return;
+    if (!node)
+        return;
 
     /* Se for "Func", muda escopo */
     if (strcmp(node->name, "Func") == 0) {
         /* children[0] = tipo_especificador, children[1] = ID, children[2] = Param_list, children[3] = Body */
         AST *tipoNode = node->children[0];
         AST *idNode   = node->children[1];
-        const char *tipo = tipoNode->name; /* "INT", "VOID" etc. */
+        const char *tipo = tipoNode->name; /* "INT", "VOID" */
         const char *funName = idNode->name;
         int line = node->line;
 
@@ -92,13 +85,9 @@ static void buildSymtabRec(AST *node) {
         int ok = st_insert(funName, "global", tipo, "funcao", line);
         if (!ok) {
             char msg[256];
-            snprintf(msg, sizeof(msg),
-                "ID duplicado '%s' no escopo 'global'",
-                funName
-            );
+            snprintf(msg, sizeof(msg), "ID duplicado '%s' no escopo 'global'", funName);
             semanticError(msg, line);
         }
-        /* pushScope para as variáveis/parâmetros da função */
         pushScope(funName);
     }
     else if (strcmp(node->name, "Decl_var") == 0) {
@@ -111,27 +100,21 @@ static void buildSymtabRec(AST *node) {
         int ok = st_insert(varName, topScope(), tipo, "variavel", line);
         if (!ok) {
             char msg[256];
-            snprintf(msg, sizeof(msg),
-                "ID duplicado '%s' no escopo '%s'",
-                varName, topScope()
-            );
+            snprintf(msg, sizeof(msg), "ID duplicado '%s' no escopo '%s'", varName, topScope());
             semanticError(msg, line);
         }
     }
     else if (strcmp(node->name, "Decl_var_array") == 0) {
         /* children[0] = tipo_especificador, children[1] = ID, children[2] = tamanho */
         const char *tipo = node->children[0]->name;
-        AST *idNode      = node->children[1];
+        AST *idNode = node->children[1];
         const char *varName = idNode->name;
         int line = node->line;
 
         int ok = st_insert(varName, topScope(), tipo, "vetor", line);
         if (!ok) {
             char msg[256];
-            snprintf(msg, sizeof(msg),
-                "ID duplicado '%s' no escopo '%s'",
-                varName, topScope()
-            );
+            snprintf(msg, sizeof(msg), "ID duplicado '%s' no escopo '%s'", varName, topScope());
             semanticError(msg, line);
         }
     }
@@ -145,10 +128,7 @@ static void buildSymtabRec(AST *node) {
         int ok = st_insert(paramName, topScope(), tipo, "variavel", line);
         if (!ok) {
             char msg[256];
-            snprintf(msg, sizeof(msg),
-                "ID duplicado '%s' no escopo '%s'",
-                paramName, topScope()
-            );
+            snprintf(msg, sizeof(msg), "ID duplicado '%s' no escopo '%s'", paramName, topScope());
             semanticError(msg, line);
         }
     }
@@ -163,10 +143,7 @@ static void buildSymtabRec(AST *node) {
         int ok = st_insert(paramName, topScope(), tipo, "vetor", line);
         if (!ok) {
             char msg[256];
-            snprintf(msg, sizeof(msg),
-                "ID duplicado '%s' no escopo '%s'",
-                paramName, topScope()
-            );
+            snprintf(msg, sizeof(msg), "ID duplicado '%s' no escopo '%s'", paramName, topScope());
             semanticError(msg, line);
         }
     }
@@ -175,14 +152,14 @@ static void buildSymtabRec(AST *node) {
         for (int i = 0; i < node->numChildren; i++) {
             buildSymtabRec(node->children[i]);
         }
-        return; /* Evita processar novamente os filhos */
+        return; // Evita processar novamente os filhos
     }
     else if (strcmp(node->name, "Param_list_void") == 0) {
-        /* Nada a fazer, já que não há parâmetros */
+        /* Não há parâmetros */
         return;
     }
 
-    /* Percorre filhos */
+    /* Percorre os filhos */
     for (int i = 0; i < node->numChildren; i++) {
         buildSymtabRec(node->children[i]);
     }
@@ -193,14 +170,9 @@ static void buildSymtabRec(AST *node) {
     }
 }
 
-/* -------------------------------------------------
-   2) checkSemantics 
-      - Faz a 2ª passada
-      - Verifica uso de IDs
-      - Repete pushScope/popScope para "Func"
-   ------------------------------------------------- */
 static void checkSemanticsRec(AST *node);
 
+/* Faz a 2ª passada para verificar uso de IDs e repete pushScope/popScope para "Func" */
 void checkSemantics(AST *root) {
     checkSemanticsRec(root);
 }
@@ -220,28 +192,24 @@ static void checkSemanticsRec(AST *node) {
         for (int i = 0; i < node->numChildren; i++) {
             checkSemanticsRec(node->children[i]);
         }
-        return; /* Evita processar novamente os filhos */
+        return; // Evita processar novamente os filhos
     }
     else if (strcmp(node->name, "Param_list_void") == 0) {
-        /* Nada a fazer */
+        /* Nada p/ fazer */
         return;
     }
 
-    /* ---- Verificações ---- */
     if (strcmp(node->name, "Var") == 0) {
         /* children[0] = ID */
         AST *idNode = node->children[0];
         const char *varName = idNode->name;
         int line = node->line;
 
-        /* st_lookup_all => procura no topoScope(), se não achar => global */
+        /* st_lookup_all: procura no topoScope(), se não achar é global */
         BucketList *b = st_lookup_all(varName, topScope());
         if (!b) {
             char msg[256];
-            snprintf(msg, sizeof(msg),
-                "ID '%s' nao declarado no escopo '%s'",
-                varName, topScope()
-            );
+            snprintf(msg, sizeof(msg), "ID '%s' nao declarado no escopo '%s'", varName, topScope());
             semanticError(msg, line);
         } else {
             /* se achou, registra linha de uso */
@@ -257,20 +225,14 @@ static void checkSemanticsRec(AST *node) {
         BucketList *b = st_lookup_all(varName, topScope());
         if (!b) {
             char msg[256];
-            snprintf(msg, sizeof(msg),
-                "ID '%s' nao declarado no escopo '%s'",
-                varName, topScope()
-            );
+            snprintf(msg, sizeof(msg), "ID '%s' nao declarado no escopo '%s'", varName, topScope());
             semanticError(msg, line);
         } else {
             st_add_lineno(varName, topScope(), line);
-            /* se b->tipoDado != "vetor", erro */
+            /* se b->tipoDado != "vetor", então erro */
             if (strcmp(b->tipoDado, "vetor") != 0) {
                 char msg[256];
-                snprintf(msg, sizeof(msg),
-                    "ID '%s' no escopo '%s' nao é vetor e esta sendo indexado",
-                    varName, topScope()
-                );
+                snprintf(msg, sizeof(msg), "ID '%s' no escopo '%s' nao é vetor e esta sendo indexado", varName, topScope());
                 semanticError(msg, line);
             }
         }
@@ -284,24 +246,17 @@ static void checkSemanticsRec(AST *node) {
         BucketList *b = st_lookup_all(funName, topScope());
         if (!b) {
             char msg[256];
-            snprintf(msg, sizeof(msg),
-                "ID '%s' nao declarado no escopo '%s'",
-                funName, topScope()
-            );
+            snprintf(msg, sizeof(msg), "ID '%s' nao declarado no escopo '%s'", funName, topScope());
             semanticError(msg, line);
         } else {
             st_add_lineno(funName, topScope(), line);
             if (strcmp(b->tipoDado, "funcao") != 0) {
                 char msg[256];
-                snprintf(msg, sizeof(msg),
-                    "ID '%s' no escopo '%s' nao é funcao e esta sendo chamado",
-                    funName, topScope()
-                );
+                snprintf(msg, sizeof(msg), "ID '%s' no escopo '%s' nao é funcao e esta sendo chamado", funName, topScope());
                 semanticError(msg, line);
             }
         }
     }
-    /* ... Outras checagens possíveis (expressao_atribuicao, etc.) ... */
 
     /* Percorre os filhos recursivamente */
     for (int i = 0; i < node->numChildren; i++) {

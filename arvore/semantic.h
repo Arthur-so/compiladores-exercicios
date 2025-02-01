@@ -2,4 +2,3 @@
 
 void buildSymtab(AST *root);
 void checkSemantics(AST *root);
-int getSemanticErrorCount();
