@@ -41,10 +41,7 @@ void doLexicalAnalysisOnly(Lexer *lexer) {
             continue;
         }
 
-        // Imprime no formato: <TOKEN> "<lexema>" [linha: X]
-        // Precisamos mapear token_code -> nome do token
-        // Ou, se você só quer imprimir o "código" mesmo, tudo bem.
-        // Exemplo simples:
+        // Imprime token
         printf("%d \"%s\" [linha: %d]\n",
                t->token_code, t->lexeme, t->line);
     }
@@ -86,11 +83,11 @@ int main(int argc, char **argv) {
             /* 2) Verifica semântica */
             checkSemantics(g_root);
 
-            /* 3) Se for AST */
+            /* 3) Se for para printar AST */
             if (print_ast) {
                 printAST(g_root, 0);
             }
-            /* 4) Se for Tabela de Símbolos */
+            /* 4) Se for para printar Tabela de Símbolos */
             if (print_symtab) {
                 printSymTab();
             }
