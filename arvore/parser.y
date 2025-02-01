@@ -3,14 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ast.h"        // Definições de nó da AST e funções auxiliares
-#include "lexeme.h"     // Definições relacionadas ao lexer
+#include "ast.h"
+#include "lexeme.h"
 
-/* Declarações necessárias para o Bison */
 int yylex();
 void yyerror(const char *s);
 
-/* Variáveis globais para armazenar a AST */
 AST *g_root = NULL;
 
 /* Variáveis globais para rastrear o último token lido */
@@ -18,7 +16,7 @@ extern char g_last_lexeme[64];
 extern int  g_last_line;
 extern int  g_last_col;
 
-/* Função para criar novos nós da AST */
+/* Criar nós da AST */
 AST* newASTNodeLine(const char *name, int line);
 AST* newASTNodeText(const char *text, int line);
 AST* newASTNodeTextInt(int value, int line);
@@ -26,7 +24,6 @@ void addChild(AST *parent, AST *child);
 
 %}
 
-/* Definição do tipo de valor semântico */
 %union {
     AST *ast;   /* Para nós da AST */
     char *str;  /* Para lexemas de ID */
@@ -36,7 +33,7 @@ void addChild(AST *parent, AST *child);
 /* Associando tokens e não-terminais com tipos do %union */
 %type <ast> programa declaracao_lista declaracao var_declaracao fun_declaracao tipo_especificador params param_lista param composto_decl local_declaracoes statement_lista statement expressao_decl selecao_decl iteracao_decl retorno_decl expressao var simples_expressao relacional soma_expressao soma termo mult fator ativacao args arg_lista
 
-/* Definição dos tokens */
+/* Tokens */
 %token <str> ID
 %token <ival> NUM
 %token IF ELSE INT RETURN VOID WHILE
@@ -48,7 +45,7 @@ void addChild(AST *parent, AST *child);
 %token OPEN_SQUARE_BRACKETS CLOSE_SQUARE_BRACKETS
 %token OPEN_CURLY_BRACKETS CLOSE_CURLY_BRACKETS
 
-/* Definição de precedência e associatividade para resolver conflitos */
+/* Definição de precedência para resolver conflitos */
 %left COMMA
 %left EQUAL
 %left EQUAL_EQUAL DIFFERENT
@@ -59,7 +56,6 @@ void addChild(AST *parent, AST *child);
 %left ELSE
 
 
-/* Início da gramática */
 %start programa
 
 %%
@@ -144,19 +140,6 @@ tipo_especificador:
     ;
 
 /* Regra para declaração de função: fun_declaracao -> tipo_especificador ID ( params ) composto_decl */
-// fun_declaracao:
-//       tipo_especificador ID OPEN_PARENTHESIS params CLOSE_PARENTHESIS composto_decl
-//       {
-//         /* Cria nó para declaração de função */
-//         AST *node = newASTNodeLine("Func", g_last_line);
-//         addChild(node, $1); /* tipo_especificador */
-//         addChild(node, newASTNodeText($2, g_last_line)); /* Nome da função diretamente */
-//         free($2); /* Libera a string do ID */
-//         addChild(node, $4); /* params */
-//         addChild(node, $6); /* corpo da função */
-//         $$ = node;
-//       }
-//     ;
 fun_declaracao:
       tipo_especificador ID OPEN_PARENTHESIS params CLOSE_PARENTHESIS composto_decl
       {
@@ -172,19 +155,6 @@ fun_declaracao:
     ;
 
 /* Regra para parâmetros: params -> param_lista | VOID */
-// params:
-//       param_lista
-//       {
-//         /* Passa a lista de parâmetros */
-//         $$ = $1;
-//       }
-//     | VOID
-//       {
-//         /* Cria nó indicando que não há parâmetros */
-//         AST *node = newASTNodeLine("params_VOID", g_last_line);
-//         $$ = node;
-//       }
-//     ;
 params:
       param_lista
       {
@@ -198,19 +168,6 @@ params:
     ;
 
 /* Regra para lista de parâmetros: param_lista -> param_lista , param | param */
-// param_lista:
-//       param_lista COMMA param
-//       {
-//         /* Adiciona o parâmetro à lista existente */
-//         addChild($1, $3);
-//         $$ = $1;
-//       }    
-//     | param
-//       {
-//         /* Passa o parâmetro como a lista */
-//         $$ = $1;
-//       }
-//     ;
 param_lista:
       param_lista COMMA param
       {
@@ -616,19 +573,6 @@ args:
     ;
 
 /* Regra para lista de argumentos: arg_lista -> arg_lista , expressao | expressao */
-// arg_lista:
-//       arg_lista COMMA expressao
-//       {
-//         /* Adiciona o argumento à lista existente */
-//         addChild($1, $3);
-//         $$ = $1;
-//       }
-//     | expressao
-//       {
-//         /* Passa a expressão como a lista */
-//         $$ = $1;
-//       }
-//     ;
 arg_lista:
       arg_lista COMMA expressao
       {
