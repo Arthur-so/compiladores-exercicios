@@ -25,47 +25,46 @@ void initSymTab() {
 
 int st_insert(const char *name, const char *scope, const char *tipoID, const char *tipoDado, int lineno) {
     unsigned int h = hash(name);
-    BucketList *l = hashTable[h];
+    BucketList *bucket_list = hashTable[h];
 
     /* Verifica se já existe no mesmo escopo, caso exista: duplicado (erro) */
-    while (l != NULL) {
-        if ((strcmp(l->name, name) == 0) &&
-            (strcmp(l->scope, scope) == 0)) {
+    while (bucket_list != NULL) {
+        if ((strcmp(bucket_list->name, name) == 0) &&
+            (strcmp(bucket_list->scope, scope) == 0)) {
             return 0; // Erro
         }
-        l = l->next;
+        bucket_list = bucket_list->next;
     }
 
     /* Cria nova entrada */
-    l = (BucketList *)malloc(sizeof(BucketList));
-    l->name   = strdup(name);
-    l->scope  = strdup(scope);
-    l->tipoID = strdup(tipoID);
-    l->tipoDado = strdup(tipoDado);
+    bucket_list = (BucketList *)malloc(sizeof(BucketList));
+    bucket_list->name   = strdup(name);
+    bucket_list->scope  = strdup(scope);
+    bucket_list->tipoID = strdup(tipoID);
+    bucket_list->tipoDado = strdup(tipoDado);
 
     /* Cria lista de linhas */
-    LineList *ll = (LineList *)malloc(sizeof(LineList));
-    ll->lineno = lineno;
-    ll->next = NULL;
-    l->lines = ll;
+    LineList *line_list = (LineList *)malloc(sizeof(LineList));
+    line_list->lineno = lineno;
+    line_list->next = NULL;
+    bucket_list->lines = line_list;
 
-    l->next = hashTable[h];
-    hashTable[h] = l;
+    bucket_list->next = hashTable[h];
+    hashTable[h] = bucket_list;
 
     return 1;
 }
 
 BucketList *st_lookup(const char *name, const char *scope) {
     unsigned int h = hash(name);
-    BucketList *l = hashTable[h];
+    BucketList *bucket_list = hashTable[h];
 
-    while (l != NULL) {
-        if ((strcmp(l->name, name) == 0) &&
-            (strcmp(l->scope, scope) == 0))
-        {
-            return l;
+    while (bucket_list != NULL) {
+        if ((strcmp(bucket_list->name, name) == 0) && (strcmp(bucket_list->scope, scope) == 0)) {
+            return bucket_list;
         }
-        l = l->next;
+
+        bucket_list = bucket_list->next;
     }
     /* Não encontrou no escopo atual */
     return NULL;
@@ -73,30 +72,30 @@ BucketList *st_lookup(const char *name, const char *scope) {
 
 /* st_lookup_all: busca no escopo atual, se não achar busca no global */
 BucketList *st_lookup_all(const char *name, const char *scope) {
-    BucketList *b = st_lookup(name, scope);
+    BucketList *bucket_list = st_lookup(name, scope);
 
-    if (!b) {
-        b = st_lookup(name, "global");
+    if (!bucket_list) {
+        bucket_list = st_lookup(name, "global");
     }
 
-    return b;
+    return bucket_list;
 }
 
 void st_add_lineno(const char *name, const char *scope, int lineno) {
-    BucketList *b = st_lookup_all(name, scope);
+    BucketList *bucket_list = st_lookup_all(name, scope);
     /* Se não achou, não faz nada */
-    if (!b) return;
+    if (!bucket_list) return;
 
     /* Percorre até o final da lista de linhas */
-    LineList *ll = b->lines;
-    while (ll->next) 
-        ll = ll->next;
+    LineList *line_list = bucket_list->lines;
+    while (line_list->next) 
+        line_list = line_list->next;
     
     /* Adiciona na lista */
-    LineList *newLine = (LineList *)malloc(sizeof(LineList));
-    newLine->lineno = lineno;
-    newLine->next = NULL;
-    ll->next = newLine;
+    LineList *new_line = (LineList *)malloc(sizeof(LineList));
+    new_line->lineno = lineno;
+    new_line->next = NULL;
+    line_list->next = new_line;
 }
 
 /* Imprime tabela */
@@ -105,25 +104,25 @@ void printSymTab() {
     printf("Nome_ID;Escopo;Tipo_ID;Tipo_dado;Linha\n");
 
     for (int i = 0; i < HASH_SIZE; i++) {
-        BucketList *l = hashTable[i];
+        BucketList *bucket_list = hashTable[i];
 
-        while (l) {
-            printf("%s;%s;%s;%s;", l->name, l->scope, l->tipoID, l->tipoDado);
+        while (bucket_list) {
+            printf("%s;%s;%s;%s;", bucket_list->name, bucket_list->scope, bucket_list->tipoID, bucket_list->tipoDado);
             
             /* Imprime linhas */
-            LineList *ll = l->lines;
+            LineList *line_list = bucket_list->lines;
             int first=1;
-            while (ll) {
+            while (line_list) {
                 if (!first) 
                     printf(",");
                 
-                printf("%d", ll->lineno);
+                printf("%d", line_list->lineno);
                 
                 first=0;
-                ll = ll->next;
+                line_list = line_list->next;
             }
             printf("\n");
-            l = l->next;
+            bucket_list = bucket_list->next;
         }
     }
 }
