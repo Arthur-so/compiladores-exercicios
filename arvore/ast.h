@@ -1,3 +1,6 @@
+#ifndef AST_H
+#define AST_H
+
 typedef struct AST {
     char *name;             // Nome do nó
     int line;               // Linha do código onde o nó aparece
@@ -10,3 +13,5 @@ AST* newASTNodeText(const char *text, int line);
 AST* newASTNodeTextInt(int value, int line);
 void addChild(AST *parent, AST *child);
 void printAST(AST *root, int level);
+
+#endif
