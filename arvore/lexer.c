@@ -86,6 +86,7 @@ Lexer* initializeLexer(const char *filename, int buffer_size) {
 
     t->error = 0;
     t->done = 0;
+    initKeywordTable();
     return lexer;
 }
 
@@ -135,24 +136,64 @@ int getCharType(char ch) {
     }
 }
 
+
 /* ---------------------------------------------------------
    4) classifyLexeme() -> dado estado final e lexema,
       retorna nosso código interno (L_...)
+      Para isso utiliza da função de hash
    --------------------------------------------------------- */
-int classifyLexeme(char* lexeme, int estado) {
-    int code = estado; // de início, use o "estado" numérico
 
-    /* Ex: estado=10 => ID, 11 => NUM, etc. */
-    if (estado == 10) { // ID
-        if (strcmp(lexeme,"else")==0)    code = L_KW_ELSE;
-        else if (strcmp(lexeme,"if")==0) code = L_KW_IF;
-        else if (strcmp(lexeme,"int")==0) code = L_KW_INT;
-        else if (strcmp(lexeme,"return")==0) code = L_KW_RETURN;
-        else if (strcmp(lexeme,"void")==0) code = L_KW_VOID;
-        else if (strcmp(lexeme,"while")==0) code = L_KW_WHILE;
+/* Tabela hash para palavras-chave */
+Keyword *keywordTable[HASH_SIZE_LEXER] = {NULL};
+
+/* Função hash simples para palavras-chave */
+unsigned int hashKeyword(const char *str) {
+    unsigned int hash = 0;
+    while (*str) {
+        hash = (hash * 31) + (*str++);
     }
+    return hash % HASH_SIZE_LEXER;
+}
 
-    return code;
+/* Insere uma palavra-chave na tabela hash */
+void insertKeyword(const char *keyword, int token) {
+    unsigned int index = hashKeyword(keyword);
+    Keyword *newNode = (Keyword *)malloc(sizeof(Keyword));
+    newNode->keyword = strdup(keyword);
+    newNode->token = token;
+    newNode->next = keywordTable[index];
+    keywordTable[index] = newNode;
+}
+
+/* Inicializa a tabela hash com palavras-chave */
+void initKeywordTable() {
+    insertKeyword("else", L_KW_ELSE);
+    insertKeyword("if", L_KW_IF);
+    insertKeyword("int", L_KW_INT);
+    insertKeyword("return", L_KW_RETURN);
+    insertKeyword("void", L_KW_VOID);
+    insertKeyword("while", L_KW_WHILE);
+}
+
+/* Busca na tabela hash para classificar palavras-chave */
+int lookupKeyword(const char *lexeme) {
+    unsigned int index = hashKeyword(lexeme);
+    Keyword *entry = keywordTable[index];
+    while (entry) {
+        if (strcmp(entry->keyword, lexeme) == 0) {
+            return entry->token;
+        }
+        entry = entry->next;
+    }
+    return L_ID;  // Se não for palavra-chave, é um identificador
+}
+
+/* Modificação da função classifyLexeme para usar a hash table */
+int classifyLexeme(char *lexeme, int estado) {
+    if (estado == L_ID) {
+        return lookupKeyword(lexeme);
+    }
+    return estado; // Se não for ID, mantém o estado original
 }
 
 /* ---------------------------------------------------------

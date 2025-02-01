@@ -33,6 +33,9 @@
 #define L_CCURLY       30
 #define L_SLASH        31
 
+#define HASH_SIZE_LEXER 31  // Tamanho primo para reduzir colisões
+
+
 /* Estrutura de buffer para leitura */
 typedef struct {
     char *data;
@@ -67,6 +70,12 @@ typedef struct {
     Token *token;
 } Lexer;
 
+typedef struct Keyword {
+    char *keyword;
+    int token;
+    struct Keyword *next;
+} Keyword;
+
 /* Funções do lexer */
 Lexer* initializeLexer(const char *filename, int buffer_size);
 void destroyLexer(Lexer *lexer);
@@ -74,6 +83,15 @@ Token* getToken(Lexer *lexer);
 
 /* Auxiliares */
 int getCharType(char ch);
+/* Declaração da tabela hash para palavras-chave */
+extern Keyword *keywordTable[HASH_SIZE_LEXER];
+
+/* Funções para manipulação da tabela hash */
+void initKeywordTable();
+void insertKeyword(const char *keyword, int token);
+int lookupKeyword(const char *lexeme);
+void freeKeywordTable();
+
 int classifyLexeme(char* lexeme, int estado);
 
 /* Tabelas do autômato */
