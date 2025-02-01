@@ -61,3 +61,15 @@ void printAST(AST *node, int depth) {
         printf(")");
     }
 }
+
+void freeAST(AST *node) {
+    if (node == NULL) return;
+    // Libera recursivamente os filhos
+    for (int i = 0; i < node->numChildren; i++) {
+        freeAST(node->children[i]);
+    }
+    // Libera o array de filhos e o nome do nó
+    free(node->children);
+    free(node->name);
+    free(node);
+}

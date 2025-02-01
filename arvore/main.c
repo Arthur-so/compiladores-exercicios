@@ -93,6 +93,8 @@ int main(int argc, char **argv) {
             }
         }
     } 
+    freeAST(g_root);
+    freeSymTab();
     destroyLexer(lexer);
     return 0;
 }

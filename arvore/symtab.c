@@ -126,3 +126,26 @@ void printSymTab() {
         }
     }
 }
+
+void freeSymTab() {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        BucketList *l = hashTable[i];
+        while (l) {
+            BucketList *temp = l;
+            l = l->next;
+            // Libera a lista de linhas
+            LineList *ll = temp->lines;
+            while (ll) {
+                LineList *tmpLL = ll;
+                ll = ll->next;
+                free(tmpLL);
+            }
+            free(temp->name);
+            free(temp->scope);
+            free(temp->tipoID);
+            free(temp->tipoDado);
+            free(temp);
+        }
+        hashTable[i] = NULL;
+    }
+}

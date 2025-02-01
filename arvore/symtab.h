@@ -36,3 +36,7 @@ void st_add_lineno(const char *name, const char *scope, int lineno);
 /* Imprime a tabela */
 void printSymTab();
 
+/* DEsaloca memória */
+void freeSymTab();
+
+

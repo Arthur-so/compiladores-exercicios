@@ -13,5 +13,6 @@ AST* newASTNodeText(const char *text, int line);
 AST* newASTNodeTextInt(int value, int line);
 void addChild(AST *parent, AST *child);
 void printAST(AST *root, int level);
+void freeAST(AST *node);
 
 #endif
