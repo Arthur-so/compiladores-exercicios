@@ -33,7 +33,7 @@ void addChild(AST *parent, AST *child) {
     parent->numChildren++;
 }
 
-/* Função para imprimir a AST no formato desejado */
+/* Imprime AST */
 void printAST(AST *node, int depth) {
     if (!node) return;
 

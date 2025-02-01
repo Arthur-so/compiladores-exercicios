@@ -1,7 +1,3 @@
-/* symtab.h */
-#ifndef SYMTAB_H
-#define SYMTAB_H
-
 #define HASH_SIZE 211
 
 /* Lista de linhas onde o identificador aparece */
@@ -10,38 +6,33 @@ typedef struct LineListRec {
     struct LineListRec *next;
 } LineList;
 
-/* Estrutura de cada "entrada" na tabela de símbolos */
+/* Entrada na tabela de símbolos */
 typedef struct BucketListRec {
-    char *name;           /* Nome do ID */
-    char *scope;          /* ex.: "global", "fun_main", etc. */
-    char *tipoID;         /* ex.: "int", "void" */
-    char *tipoDado;       /* "variavel", "vetor", "funcao" */
-    LineList *lines;      /* linhas onde aparece (decl/uso) */
-
-    struct BucketListRec *next; /* encadeamento (colisões) */
+    char *name;           // Nome do ID
+    char *scope;          // Escopo
+    char *tipoID;         // Tipo
+    char *tipoDado;       // Tpo do dado (variavel, funcao, ...)
+    LineList *lines;      // Lista de linhas onde aparece
+    struct BucketListRec *next; /* encadeamento (p/ colisões) */
 } BucketList;
 
 extern BucketList *hashTable[HASH_SIZE];
 
-/* Inicializa a hashTable */
+/* Inicializa a tabela hash */
 void initSymTab();
 
 /* Insere um novo ID (retorna 1 se OK, 0 se duplicado) */
-int st_insert(const char *name, const char *scope,
-              const char *tipoID, const char *tipoDado,
-              int lineno);
+int st_insert(const char *name, const char *scope, const char *tipoID, const char *tipoDado, int lineno);
 
 /* Procura no escopo exato */
 BucketList *st_lookup(const char *name, const char *scope);
 
-/* Similar, mas se não achar no escopo, procura no global
-   (ajuste se quiser algo mais complexo) */
+/* Procura no escopo exato, mas se não achar, procura no global */
 BucketList *st_lookup_all(const char *name, const char *scope);
 
 /* Adiciona uma nova linha de uso. */
 void st_add_lineno(const char *name, const char *scope, int lineno);
 
-/* Imprime a Tabela no formato pedido. */
+/* Imprime a tabela */
 void printSymTab();
 
-#endif
