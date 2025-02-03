@@ -5,16 +5,14 @@
 
 BucketList *hashTable[HASH_SIZE];
 
+// funcao hash: djb2
 static unsigned int hash(const char *key) {
-    unsigned int h = 0;
-    while (*key) {
-        h = (h << 4) + (*key);
-        unsigned int g = h & 0xF0000000;
-        if (g) h ^= g >> 24;
-        h &= ~g;
-        key++;
+    unsigned long hash = 5381; // Número primo inicial
+    int c;
+    while ((c = *key++)) { 
+        hash = ((hash << 5) + hash) + c; // hash * 33 + c
     }
-    return h % HASH_SIZE;
+    return hash % HASH_SIZE;
 }
 
 void initSymTab() {
