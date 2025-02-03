@@ -146,11 +146,11 @@ int getCharType(char ch) {
 /* Tabela hash para palavras-chave */
 Keyword *keywordTable[HASH_SIZE_LEXER] = {NULL};
 
-/* Função hash simples para palavras-chave */
+/* Função hash multiplicativa para palavras-chave */
 unsigned int hashKeyword(const char *str) {
     unsigned int hash = 0;
     while (*str) {
-        hash = (hash * HASH_SIZE_LEXER) + (*str++);
+        hash = (hash * 31) + (*str++);
     }
     return hash % HASH_SIZE_LEXER;
 }
