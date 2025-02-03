@@ -150,7 +150,7 @@ Keyword *keywordTable[HASH_SIZE_LEXER] = {NULL};
 unsigned int hashKeyword(const char *str) {
     unsigned int hash = 0;
     while (*str) {
-        hash = (hash * 31) + (*str++);
+        hash = (hash * HASH_SIZE_LEXER) + (*str++);
     }
     return hash % HASH_SIZE_LEXER;
 }

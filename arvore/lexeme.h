@@ -33,8 +33,7 @@
 #define L_CCURLY       30
 #define L_SLASH        31
 
-#define HASH_SIZE_LEXER 31  // Tamanho primo para reduzir colisões
-
+#define HASH_SIZE_LEXER 31
 
 /* Estrutura de buffer para leitura */
 typedef struct {
